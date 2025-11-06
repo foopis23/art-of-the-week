@@ -25,7 +25,8 @@ Each week, we will generate a theme for art creation. Participants will create a
 	- Allow users to suggest themes for future weeks
 
 ## Todo List
-- [ ] Set up Hello World Discord Bot
+- [x] Set up Project
+- [ ] Create ping command
 - [ ] Setup sqlite db
 - [ ] Create schema for available themes (list of themes)
 - [ ] Create theme generation
@@ -38,5 +39,7 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [ ] Monitor submission channel for replies with attachments
 - [ ] Upload attachments to the corresponding Google Drive folder
 - [ ] Update submission tracking in the database
+- [ ] Dockerize the bot
 - [ ] Testing and debugging
+- [ ] Deploy
 - [ ] Documentation
