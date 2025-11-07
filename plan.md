@@ -31,7 +31,7 @@ Each week, we will generate a theme for art creation. Participants will create a
   - [x] Create Command Registry
   - [x] Create Slash Command Handler
   - [x] Create Slash Command Register CLI Tool
-- [ ] Setup sqlite db
+- [x] Setup sqlite db
 - [ ] Create schema for available themes (list of themes)
 - [ ] Create theme generation
 - [ ] Send Theme generation message

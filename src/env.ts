@@ -12,6 +12,7 @@ export const env = z
       .min(1, 'DISCORD_PUBLIC_KEY is required')
       .transform((value) => value.toLowerCase()),
     DISCORD_TESTING_GUILD_ID: z.string().optional(),
+    DB_FILE_NAME: z.string('DB_FILE_NAME is required').min(1, 'DB_FILE_NAME is required'),
     NODE_ENV: z.enum(['development', 'production']).default('development'),
   })
   .parse(process.env)
