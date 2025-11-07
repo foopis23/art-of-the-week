@@ -34,8 +34,8 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [x] Setup sqlite db
 - [x] Create schema for available themes (list of themes)
 - [x] Create theme generation
-- [ ] Configure Theme for Guild
-  - [ ] Theme announcement channel
+- [x] Configure Theme for Guild
+  - [x] Theme announcement channel
 - [ ] Send Theme generation message
 - [ ] Implement theme generation scheduling
 - [ ] Integrate Google Drive API

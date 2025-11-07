@@ -1,13 +1,15 @@
 import { program } from 'commander'
+import type { ChatInputCommandInteraction } from 'discord.js'
 import { GatewayIntentBits, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
 import { env } from './env'
 import { CommandClient } from './lib/command-client'
 import { log } from './log'
 import { pingCommands } from './modules/ping/commands'
+import { settingsCommands } from './modules/settings/commands'
 import { themeCommands } from './modules/theme/commands'
 
-const commands = [...pingCommands, ...themeCommands]
+const commands = [...pingCommands, ...themeCommands, ...settingsCommands]
 
 program
   .name('art-of-the-week')
@@ -38,7 +40,7 @@ program
       }
 
       log.info(command, 'Executing command')
-      await command.execute(interaction)
+      await command.execute(interaction as ChatInputCommandInteraction, { client })
     })
 
     client.login(env.DISCORD_TOKEN)

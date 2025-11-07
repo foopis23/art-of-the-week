@@ -1,11 +1,11 @@
-import type { CommandInteraction } from 'discord.js'
+import type { ChatInputCommandInteraction } from 'discord.js'
 import { SlashCommandBuilder } from 'discord.js'
 import type { Command } from '../../lib/command'
 import { ThemeService } from './service'
 
 export const generateThemeCommand = {
   data: new SlashCommandBuilder().setName('theme').setDescription('Generated a random theme'),
-  execute: async (interaction: CommandInteraction) => {
+  execute: async (interaction: ChatInputCommandInteraction) => {
     await interaction.deferReply()
 
     if (!interaction.guild?.id) {
