@@ -36,8 +36,8 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [x] Create theme generation
 - [x] Configure Theme for Guild
   - [x] Theme announcement channel
-- [ ] Send Theme generation message
-- [ ] Implement theme generation scheduling
+- [x] Send Theme generation message
+- [x] Implement theme generation scheduling
 - [ ] Integrate Google Drive API
 - [ ] Create schema for tracking themes generated (date, theme, folder_id, message_id)
 - [ ] Setup Google Drive folder creation when theme is generated "Theme Name - DD/MM/YY"

@@ -1,6 +1,7 @@
 import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, SlashCommandBuilder } from 'discord.js'
 import type { Command } from '../../lib/command'
+import { log } from '../../log'
 import { ConfigureService } from './service'
 
 export const settingsCommand = {
@@ -34,7 +35,7 @@ export const settingsCommand = {
     switch (interaction.options.getSubcommand()) {
       case 'channel': {
         const channel = interaction.options.getChannel('channel')
-
+        log.debug({ channel, guildId: interaction.guild.id }, 'Updating theme announcement channel')
         if (!channel) {
           await interaction.editReply({
             content: 'No channel provided',
@@ -43,19 +44,10 @@ export const settingsCommand = {
           return
         }
 
-        const result = await ConfigureService.setThemeAnnouncementChannel(
-          interaction.guild.id,
-          channel.id,
-        )
-        if (result instanceof Error) {
-          await interaction.editReply({
-            content: `Error setting theme announcement channel: ${result.message}`,
-          })
-        } else {
-          await interaction.editReply({
-            content: `Theme announcement channel set to ${channel.name}`,
-          })
-        }
+        await ConfigureService.setThemeAnnouncementChannel(interaction.guild.id, channel.id)
+        await interaction.editReply({
+          content: `Theme announcement channel set to ${channel.name}`,
+        })
         break
       }
 

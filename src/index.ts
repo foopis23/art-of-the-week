@@ -1,23 +1,19 @@
 import { program } from 'commander'
+import { Cron } from 'croner'
 import type { ChatInputCommandInteraction } from 'discord.js'
-import { GatewayIntentBits, REST, Routes } from 'discord.js'
+import { MessageFlags, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
+import { client } from './client'
+import { commands } from './commands'
 import { env } from './env'
-import { CommandClient } from './lib/command-client'
+import { jobs } from './jobs'
 import { log } from './log'
-import { pingCommands } from './modules/ping/commands'
-import { settingsCommands } from './modules/settings/commands'
-import { themeCommands } from './modules/theme/commands'
-
-const commands = [...pingCommands, ...themeCommands, ...settingsCommands]
 
 program
   .name('art-of-the-week')
   .description('A discord bot for the Art of the Week project')
   .version(pkg.version, '-v, --version', 'Display the version')
   .action(async () => {
-    const client = new CommandClient({ intents: [GatewayIntentBits.Guilds] }, commands)
-
     client.once('clientReady', (client) => {
       log.info(
         {
@@ -36,7 +32,7 @@ program
 
       if (!command) {
         log.error(interaction, 'Command not found')
-        return interaction.reply({ content: 'Command not found', ephemeral: true })
+        return interaction.reply({ content: 'Command not found', flags: MessageFlags.Ephemeral })
       }
 
       log.info(command, 'Executing command')
@@ -44,6 +40,24 @@ program
     })
 
     client.login(env.DISCORD_TOKEN)
+    const crons = jobs.map(
+      (job) =>
+        new Cron(job.schedule, job.options ?? {}, async (self, context) => {
+          log.info({ job: job.options?.name }, 'Executing cron job')
+          await job.execute(self, context)
+          log.info({ job: job.options?.name }, 'Cron job executed')
+        }),
+    )
+    log.info(
+      {
+        crons: crons.map((cron) => ({
+          name: cron.name,
+          schedule: cron.getPattern(),
+          next: cron.nextRun()?.toLocaleString(),
+        })),
+      },
+      'Started cron jobs',
+    )
   })
 
 program

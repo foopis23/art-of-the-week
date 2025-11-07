@@ -13,7 +13,7 @@ export const generateThemeCommand = {
       return
     }
 
-    const themeResult = await ThemeService.generateTheme(interaction.guild.id)
+    const themeResult = await ThemeService.generateGuildTheme(interaction.guild.id)
     if (themeResult instanceof Error) {
       await interaction.editReply(`Error generating theme: ${themeResult.message}`)
       return

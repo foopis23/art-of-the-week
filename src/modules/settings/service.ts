@@ -10,6 +10,7 @@ export abstract class ConfigureService {
     return {
       guildId,
       themeAnnouncementChannelId: null,
+      themeAnnouncementDay: 'SUN',
       createdAt: new Date().getTime(),
     }
   }
@@ -28,19 +29,13 @@ export abstract class ConfigureService {
     return settings[0]
   }
 
-  static async setThemeAnnouncementChannel(
-    guildId: string,
-    channelId: string,
-  ): Promise<void | Error> {
-    try {
-      await db
-        .update(guildSettingsTable)
-        .set({ themeAnnouncementChannelId: channelId })
-        .where(eq(guildSettingsTable.guildId, guildId))
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        return error
-      }
-    }
+  static async setThemeAnnouncementChannel(guildId: string, channelId: string): Promise<void> {
+    await db
+      .insert(guildSettingsTable)
+      .values({ guildId, themeAnnouncementChannelId: channelId })
+      .onConflictDoUpdate({
+        target: guildSettingsTable.guildId,
+        set: { themeAnnouncementChannelId: channelId },
+      })
   }
 }
