@@ -4,24 +4,31 @@ import { db } from '../../db'
 import { availableThemesTable, guildSettingsTable } from '../../db/schema'
 import { getCurrentDayOfTheWeek } from '../../lib/date'
 import { log } from '../../log'
+import { DEFAULT_THEME_POOL } from './const'
 
 export abstract class ThemeService {
   /**
    * Generate a theme for a guild.
    */
   static async generateGuildTheme(guildId: string): Promise<string | Error> {
-    const result = await db
-      .select()
-      .from(availableThemesTable)
-      .where(eq(availableThemesTable.guildId, guildId))
-      .orderBy(sql`RANDOM()`)
-      .limit(1)
+    // loop to retry if no themes are found
+    for (let i = 0; i < 2; i++) {
+      const result = await db
+        .select()
+        .from(availableThemesTable)
+        .where(eq(availableThemesTable.guildId, guildId))
+        .orderBy(sql`RANDOM()`)
+        .limit(1)
 
-    if (result.length === 0 || !result[0]) {
-      return new Error('No themes found')
+      if (result.length === 0 || !result[0]) {
+        await this.setDefaultThemesForGuild(guildId)
+        continue
+      }
+
+      return result[0].theme
     }
 
-    return result[0].theme
+    return new Error('No themes found')
   }
 
   /**
@@ -46,6 +53,12 @@ export abstract class ThemeService {
       }
       await this.sendThemeAnnouncement(guild.themeAnnouncementChannelId!, theme)
     }
+  }
+
+  private static async setDefaultThemesForGuild(guildId: string): Promise<void> {
+    await db
+      .insert(availableThemesTable)
+      .values(DEFAULT_THEME_POOL.map((theme) => ({ guildId, theme })))
   }
 
   /**
