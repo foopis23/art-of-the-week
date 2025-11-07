@@ -1,10 +1,13 @@
 import { program } from 'commander'
 import { GatewayIntentBits, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
-import { commands } from './commands'
 import { env } from './env'
 import { CommandClient } from './lib/command-client'
 import { log } from './log'
+import { pingCommands } from './modules/ping/commands'
+import { themeCommands } from './modules/theme/commands'
+
+const commands = [...pingCommands, ...themeCommands]
 
 program
   .name('art-of-the-week')
@@ -51,7 +54,7 @@ program
         log.info(
           {
             commands: commands.map((command) => command.data.name),
-            count: commands.size,
+            count: commands.length,
           },
           'Started refreshing application guild (/) commands',
         )
@@ -70,7 +73,7 @@ program
       log.info(
         {
           commands: commands.map((command) => command.data.name),
-          count: commands.size,
+          count: commands.length,
         },
         'Started refreshing application global (/) commands',
       )

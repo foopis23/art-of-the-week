@@ -33,7 +33,9 @@ Each week, we will generate a theme for art creation. Participants will create a
   - [x] Create Slash Command Register CLI Tool
 - [x] Setup sqlite db
 - [x] Create schema for available themes (list of themes)
-- [ ] Create theme generation
+- [x] Create theme generation
+- [ ] Configure Theme for Guild
+  - [ ] Theme announcement channel
 - [ ] Send Theme generation message
 - [ ] Implement theme generation scheduling
 - [ ] Integrate Google Drive API

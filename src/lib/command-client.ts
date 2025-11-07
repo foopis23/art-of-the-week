@@ -1,12 +1,13 @@
-import { Client, type ClientOptions, type Collection } from 'discord.js'
-import type { Command } from '../commands/type'
+import { Client, Collection, type ClientOptions } from 'discord.js'
+import type { Command } from './command'
 
 export class CommandClient extends Client {
-  constructor(
-    options: ClientOptions,
-    public readonly commands: Collection<string, Command>,
-  ) {
+  public readonly commands: Collection<string, Command>
+
+  constructor(options: ClientOptions, commands: Command[]) {
     super(options)
-    this.commands = commands
+    this.commands = new Collection<string, Command>(
+      commands.map((command) => [command.data.name, command]),
+    )
   }
 }
