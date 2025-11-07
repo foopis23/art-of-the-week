@@ -1,6 +1,6 @@
-import { createPinoLogger } from '@bogeychan/elysia-logger'
+import pino from 'pino'
 
-export const log = createPinoLogger({
+export const log = pino({
   level: 'info',
   transport: {
     target: 'pino-pretty',

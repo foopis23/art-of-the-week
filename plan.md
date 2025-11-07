@@ -26,11 +26,11 @@ Each week, we will generate a theme for art creation. Participants will create a
 
 ## Todo List
 - [x] Set up Project
-- [ ] Create ping command
-  - [ ] Create Command Builder
-  - [ ] Create Command Registry
-  - [ ] Create Slash Command Handler
-  - [ ] Create Slash Command Register CLI Tool
+- [x] Create ping command
+  - [x] Create Command Builder
+  - [x] Create Command Registry
+  - [x] Create Slash Command Handler
+  - [x] Create Slash Command Register CLI Tool
 - [ ] Setup sqlite db
 - [ ] Create schema for available themes (list of themes)
 - [ ] Create theme generation

@@ -12,7 +12,6 @@ export default defineConfig([
     languageOptions: { globals: globals.node },
   },
   tseslint.configs.recommended,
-  eslintPluginPrettierRecommended,
   {
     rules: {
       '@typescript-eslint/no-namespace': 'off',
@@ -21,4 +20,5 @@ export default defineConfig([
       '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
+  eslintPluginPrettierRecommended,
 ])

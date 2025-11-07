@@ -11,11 +11,7 @@ export const env = z
       .string('DISCORD_PUBLIC_KEY is required')
       .min(1, 'DISCORD_PUBLIC_KEY is required')
       .transform((value) => value.toLowerCase()),
-    PORT: z.string().min(1, 'PORT is required').default('3000').transform(Number),
-    HOSTNAME: z
-      .string()
-      .default('0.0.0.0')
-      .transform((value) => value.toLowerCase()),
+    DISCORD_TESTING_GUILD_ID: z.string().optional(),
     NODE_ENV: z.enum(['development', 'production']).default('development'),
   })
   .parse(process.env)
