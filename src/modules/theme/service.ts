@@ -1,9 +1,8 @@
-import { and, eq, isNotNull, sql } from 'drizzle-orm/sql'
 import { client } from '../../client'
-import { db } from '../../db'
-import { availableThemesTable, guildSettingsTable } from '../../db/schema'
+import { data } from '../../db/data'
 import { getCurrentDayOfTheWeek } from '../../lib/date'
 import { log } from '../../log'
+import { SettingsService } from '../settings/service'
 import { DEFAULT_THEME_POOL } from './const'
 
 export abstract class ThemeService {
@@ -13,12 +12,7 @@ export abstract class ThemeService {
   static async generateGuildTheme(guildId: string): Promise<string | Error> {
     // loop to retry if no themes are found
     for (let i = 0; i < 2; i++) {
-      const result = await db
-        .select()
-        .from(availableThemesTable)
-        .where(eq(availableThemesTable.guildId, guildId))
-        .orderBy(sql`RANDOM()`)
-        .limit(1)
+      const result = await data.availableThemes.getRandomForGuild({ guildId })
 
       if (result.length === 0 || !result[0]) {
         await this.setDefaultThemesForGuild(guildId)
@@ -36,36 +30,23 @@ export abstract class ThemeService {
    */
   static async generateThemeForAllGuilds(): Promise<void> {
     const currentDayOfTheWeek = getCurrentDayOfTheWeek()
-    const guilds = await db
-      .select()
-      .from(guildSettingsTable)
-      .where(
-        and(
-          eq(guildSettingsTable.themeAnnouncementDay, currentDayOfTheWeek),
-          isNotNull(guildSettingsTable.themeAnnouncementChannelId),
-        ),
-      )
+    const allGuildSettings = await SettingsService.getAllByThemeAnnouncementDay(currentDayOfTheWeek)
 
-    for (const guild of guilds) {
-      const theme = await this.generateGuildTheme(guild.guildId)
+    for (const guildSettings of allGuildSettings) {
+      const theme = await this.generateGuildTheme(guildSettings.guildId)
       if (theme instanceof Error) {
         continue
       }
-      await this.sendThemeAnnouncement(guild.guildId, guild.themeAnnouncementChannelId!, theme)
+      await this.sendThemeAnnouncement(
+        guildSettings.guildId,
+        guildSettings.themeAnnouncementChannelId!,
+        theme,
+      )
     }
   }
 
   static async forceGenerateThemeForGuild(guildId: string): Promise<void | Error> {
-    const guildQueryResults = await db
-      .select()
-      .from(guildSettingsTable)
-      .where(eq(guildSettingsTable.guildId, guildId))
-      .limit(1)
-
-    const guildSettings = guildQueryResults[0]
-    if (!guildSettings) {
-      return new Error('Guild settings not found')
-    }
+    const guildSettings = await SettingsService.getGuildSettings(guildId)
 
     if (!guildSettings.themeAnnouncementChannelId) {
       return new Error('Theme announcement channel not found')
@@ -75,14 +56,12 @@ export abstract class ThemeService {
     if (theme instanceof Error) {
       return theme
     }
-
     await this.sendThemeAnnouncement(guildId, guildSettings.themeAnnouncementChannelId!, theme)
   }
 
   private static async setDefaultThemesForGuild(guildId: string): Promise<void> {
-    await db
-      .insert(availableThemesTable)
-      .values(DEFAULT_THEME_POOL.map((theme) => ({ guildId, theme })))
+    await data.availableThemes.deleteGuildThemes({ guildId })
+    await data.availableThemes.insertGuildThemes({ guildId, themes: DEFAULT_THEME_POOL })
   }
 
   /**

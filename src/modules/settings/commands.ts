@@ -2,7 +2,7 @@ import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, SlashCommandBuilder } from 'discord.js'
 import type { Command } from '../../lib/command'
 import { log } from '../../log'
-import { ConfigureService } from './service'
+import { SettingsService } from './service'
 
 export const settingsCommand = {
   data: new SlashCommandBuilder()
@@ -44,7 +44,7 @@ export const settingsCommand = {
           return
         }
 
-        await ConfigureService.setThemeAnnouncementChannel(interaction.guild.id, channel.id)
+        await SettingsService.setThemeAnnouncementChannel(interaction.guild.id, channel.id)
         await interaction.editReply({
           content: `Theme announcement channel set to ${channel.name}`,
         })

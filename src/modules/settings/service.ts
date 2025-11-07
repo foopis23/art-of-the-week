@@ -1,12 +1,9 @@
-import { eq } from 'drizzle-orm/sql'
-import { db } from '../../db'
-import { guildSettingsTable } from '../../db/schema'
+import { data } from '../../db/data'
+import type { Day } from '../../lib/date'
 import type { SettingsModel } from './model'
 
-export abstract class ConfigureService {
-  private static async createDefaultSettingsObject(
-    guildId: string,
-  ): Promise<SettingsModel.GuildSettings> {
+export abstract class SettingsService {
+  private static createDefaultSettingsObject(guildId: string): SettingsModel.GuildSettings {
     return {
       guildId,
       themeAnnouncementChannelId: null,
@@ -16,26 +13,20 @@ export abstract class ConfigureService {
   }
 
   static async getGuildSettings(guildId: string): Promise<SettingsModel.GuildSettings> {
-    const settings = await db
-      .select()
-      .from(guildSettingsTable)
-      .where(eq(guildSettingsTable.guildId, guildId))
-      .limit(1)
-
+    const settings = await data.guildSettings.getByGuildId({ guildId })
     if (settings.length === 0 || !settings[0]) {
-      return this.createDefaultSettingsObject(guildId)
+      const defaultSettings = this.createDefaultSettingsObject(guildId)
+      await data.guildSettings.create(defaultSettings)
+      return defaultSettings
     }
-
     return settings[0]
   }
 
+  static async getAllByThemeAnnouncementDay(day: Day): Promise<SettingsModel.GuildSettings[]> {
+    return await data.guildSettings.getAllByThemeAnnouncementDay({ day })
+  }
+
   static async setThemeAnnouncementChannel(guildId: string, channelId: string): Promise<void> {
-    await db
-      .insert(guildSettingsTable)
-      .values({ guildId, themeAnnouncementChannelId: channelId })
-      .onConflictDoUpdate({
-        target: guildSettingsTable.guildId,
-        set: { themeAnnouncementChannelId: channelId },
-      })
+    await data.guildSettings.setThemeAnnouncementChannel({ guildId, channelId })
   }
 }
