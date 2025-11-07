@@ -51,8 +51,32 @@ export abstract class ThemeService {
       if (theme instanceof Error) {
         continue
       }
-      await this.sendThemeAnnouncement(guild.themeAnnouncementChannelId!, theme)
+      await this.sendThemeAnnouncement(guild.guildId, guild.themeAnnouncementChannelId!, theme)
     }
+  }
+
+  static async forceGenerateThemeForGuild(guildId: string): Promise<void | Error> {
+    const guildQueryResults = await db
+      .select()
+      .from(guildSettingsTable)
+      .where(eq(guildSettingsTable.guildId, guildId))
+      .limit(1)
+
+    const guildSettings = guildQueryResults[0]
+    if (!guildSettings) {
+      return new Error('Guild settings not found')
+    }
+
+    if (!guildSettings.themeAnnouncementChannelId) {
+      return new Error('Theme announcement channel not found')
+    }
+
+    const theme = await this.generateGuildTheme(guildId)
+    if (theme instanceof Error) {
+      return theme
+    }
+
+    await this.sendThemeAnnouncement(guildId, guildSettings.themeAnnouncementChannelId!, theme)
   }
 
   private static async setDefaultThemesForGuild(guildId: string): Promise<void> {
@@ -64,8 +88,13 @@ export abstract class ThemeService {
   /**
    * Send a theme announcement to a channel.
    */
-  private static async sendThemeAnnouncement(channelId: string, theme: string): Promise<void> {
-    const channel = await client.channels.fetch(channelId)
+  private static async sendThemeAnnouncement(
+    guildId: string,
+    channelId: string,
+    theme: string,
+  ): Promise<void> {
+    const guild = await client.guilds.fetch(guildId)
+    const channel = await guild.channels.fetch(channelId)
     if (!channel || !channel.isTextBased()) {
       return
     }
