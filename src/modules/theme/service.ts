@@ -1,3 +1,4 @@
+import { ButtonStyle, ComponentType } from 'discord.js'
 import { client } from '../../client'
 import { data } from '../../db/data'
 import { getCurrentDayOfTheWeek } from '../../lib/date'
@@ -102,7 +103,48 @@ export abstract class ThemeService {
     }
 
     if (channel.isSendable()) {
-      await channel.send({ content: `The theme of the week is ${theme}` })
+      const date = new Date()
+      const deadline = new Date(date.getTime() + 1000 * 60 * 60 * 24 * 7)
+      const dateString = date.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+      const deadlineString = deadline.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+      await channel.send({
+        flags: 32768,
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `# Theme of the Week (${dateString})
+~~                                                                                                                ~~
+-# The dawn of the new week has begun.
+## New Theme: [${theme}]
+Deadline: ${deadlineString}, 11:59pm
+All art is accepted. Submission Link:
+`,
+          },
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                custom_id: 'open_theme_submission',
+                type: ComponentType.Button,
+                style: ButtonStyle.Primary,
+                label: 'Upload Submission',
+              },
+            ],
+          },
+          {
+            type: ComponentType.TextDisplay,
+            content: `-# or submit here: https://drive.google.com/drive/folders/1c2KhgvSKbzuEB9rNHzcNK6L3GHOydXtL`,
+          },
+        ],
+      })
     } else {
       log.error({ channelId, theme }, 'Failed to send theme announcement. Channel is not sendable.')
     }
