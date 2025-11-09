@@ -10,19 +10,42 @@ export abstract class ThemeService {
    * Generate a theme for a guild.
    */
   static async generateGuildTheme(guildId: string): Promise<string | Error> {
-    // loop to retry if no themes are found
-    for (let i = 0; i < 2; i++) {
-      const result = await data.availableThemes.getRandomForGuild({ guildId })
+    const totalThemeCount = await data.availableThemes.getGuildThemeCount({
+      guildId,
+    })
 
-      if (result.length === 0 || !result[0]) {
-        await this.setDefaultThemesForGuild(guildId)
-        continue
-      }
-
-      return result[0].theme
+    if (totalThemeCount.length === 0 || !totalThemeCount[0]) {
+      return new Error('Failed to get theme count')
     }
 
-    return new Error('No themes found')
+    if (totalThemeCount[0]?.count === 0) {
+      await this.setDefaultThemesForGuild(guildId)
+    }
+
+    const availableThemeCount = await data.availableThemes.getGuildUnusedThemeCount({
+      guildId,
+    })
+
+    if (availableThemeCount.length === 0 || !availableThemeCount[0]) {
+      return new Error('Failed to get available theme count')
+    }
+
+    if (availableThemeCount[0]?.count === 0) {
+      await data.availableThemes.resetThemeUsageForGuild({ guildId })
+    }
+
+    const randomTheme = await data.availableThemes.getRandomForGuild({ guildId })
+
+    if (randomTheme.length === 0 || !randomTheme[0]) {
+      return new Error('Failed to get random theme')
+    }
+
+    await data.availableThemes.setThemeAsUsed({
+      guildId,
+      theme: randomTheme[0].theme,
+    })
+
+    return randomTheme[0].theme
   }
 
   /**

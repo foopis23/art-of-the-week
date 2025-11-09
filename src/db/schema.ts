@@ -8,6 +8,7 @@ export const availableThemesTable = sqliteTable('available_themes', {
     .notNull(),
   guildId: text('guild_id').notNull(),
   theme: text('theme').notNull(),
+  usedAt: integer('used_at'),
   createdAt: integer('created_at')
     .notNull()
     .$default(() => new Date().getTime()),

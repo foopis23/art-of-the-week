@@ -1,4 +1,4 @@
-import { eq, sql, type InferInsertModel } from 'drizzle-orm'
+import { and, count, eq, isNull, sql, type InferInsertModel } from 'drizzle-orm'
 import { db } from '.'
 import type { Day } from '../lib/date'
 import { availableThemesTable, guildSettingsTable } from './schema'
@@ -45,9 +45,21 @@ export const data = {
       return await db
         .select()
         .from(availableThemesTable)
-        .where(eq(availableThemesTable.guildId, guildId))
+        .where(and(eq(availableThemesTable.guildId, guildId), isNull(availableThemesTable.usedAt)))
         .orderBy(sql`RANDOM()`)
         .limit(1)
+    },
+    getGuildThemeCount: async ({ guildId }: { guildId: string }) => {
+      return await db
+        .select({ count: count() })
+        .from(availableThemesTable)
+        .where(eq(availableThemesTable.guildId, guildId))
+    },
+    getGuildUnusedThemeCount: async ({ guildId }: { guildId: string }) => {
+      return await db
+        .select({ count: count() })
+        .from(availableThemesTable)
+        .where(and(eq(availableThemesTable.guildId, guildId), isNull(availableThemesTable.usedAt)))
     },
     insertGuildThemes: async ({ guildId, themes }: { guildId: string; themes: string[] }) => {
       return await db
@@ -56,6 +68,20 @@ export const data = {
     },
     deleteGuildThemes: async ({ guildId }: { guildId: string }) => {
       return await db.delete(availableThemesTable).where(eq(availableThemesTable.guildId, guildId))
+    },
+    resetThemeUsageForGuild: async ({ guildId }: { guildId: string }) => {
+      return await db
+        .update(availableThemesTable)
+        .set({ usedAt: null })
+        .where(eq(availableThemesTable.guildId, guildId))
+    },
+    setThemeAsUsed: async ({ guildId, theme }: { guildId: string; theme: string }) => {
+      return await db
+        .update(availableThemesTable)
+        .set({ usedAt: new Date().getTime() })
+        .where(
+          and(eq(availableThemesTable.guildId, guildId), eq(availableThemesTable.theme, theme)),
+        )
     },
   },
 }
