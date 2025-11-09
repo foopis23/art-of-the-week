@@ -31,6 +31,7 @@
     "discord.js": "^14.24.2",
     "drizzle-orm": "^0.44.7",
     "elysia": "^1.4.15",
+    "googleapis": "^165.0.0",
     "pino": "^10.1.0",
     "tweetnacl": "^1.0.3",
     "zod": "^4.1.12"
