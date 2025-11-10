@@ -47,7 +47,7 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [x] Deduplicate themes so that every theme in the pool has to used before you generating a previous one
 - [x] Integrate Google Drive API
 - [ ] Create Theme Submission Message Component
-  - [ ] Create Button Interaction
+  - [x] Create Button Interaction
   - [ ] Open Modal on Button Press
   - [ ] Handle Modal Submission
 - [ ] Setup Google Drive folder creation when theme is generated "Theme Name - DD/MM/YY"
