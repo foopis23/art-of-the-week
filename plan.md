@@ -45,14 +45,16 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [x] Send Theme generation message
 - [x] Implement theme generation scheduling
 - [x] Deduplicate themes so that every theme in the pool has to used before you generating a previous one
-- [ ] Integrate Google Drive API
+- [x] Integrate Google Drive API
 - [ ] Create Theme Submission Message Component
-- [ ] Create schema for tracking themes generated (date, theme, folder_id, message_id)
+  - [ ] Create Button Interaction
+  - [ ] Open Modal on Button Press
+  - [ ] Handle Modal Submission
 - [ ] Setup Google Drive folder creation when theme is generated "Theme Name - DD/MM/YY"
 - [ ] Create schema for tracking submissions (user id, nickname, theme id, attachment link, timestamp)
-- [ ] Monitor submission channel for replies with attachments
 - [ ] Upload attachments to the corresponding Google Drive folder
 - [ ] Update submission tracking in the database
+- [ ] Create schema for tracking themes generated (date, theme, folder_id, message_id)
 - [ ] Dockerize the bot
 - [ ] Testing and debugging
 - [ ] Deploy

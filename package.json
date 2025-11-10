@@ -26,7 +26,9 @@
   },
   "dependencies": {
     "@bogeychan/elysia-logger": "^0.1.10",
+    "@types/common-tags": "^1.8.4",
     "commander": "^14.0.2",
+    "common-tags": "^1.8.2",
     "croner": "^9.1.0",
     "discord.js": "^14.24.2",
     "drizzle-orm": "^0.44.7",

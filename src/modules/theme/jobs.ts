@@ -1,5 +1,5 @@
-import type { Job } from '../../lib/job'
-import { ThemeService } from './service'
+import type { Job } from '@/lib/job'
+import { ThemeService } from '@/modules/theme/service'
 
 export const themeJobs: Job[] = [
   {

@@ -1,5 +1,5 @@
-import { data } from '../../db/data'
-import type { Day } from '../../lib/date'
+import { data } from '@/db/data'
+import type { Day } from '@/lib/date'
 import type { SettingsModel } from './model'
 
 export abstract class SettingsService {

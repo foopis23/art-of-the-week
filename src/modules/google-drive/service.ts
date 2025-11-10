@@ -1,5 +1,5 @@
+import { drive } from '@/lib/google/drive'
 import type { Attachment } from 'discord.js'
-import { drive } from '../../lib/google/drive'
 
 export abstract class GoogleDriveService {
   static async uploadAttachmentToGoogleDriveFolder(

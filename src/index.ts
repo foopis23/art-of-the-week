@@ -1,13 +1,13 @@
+import { client } from '@/client'
+import { commands } from '@/commands'
+import { env } from '@/env'
+import { jobs } from '@/jobs'
+import { log } from '@/log'
 import { program } from 'commander'
 import { Cron } from 'croner'
 import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
-import { client } from './client'
-import { commands } from './commands'
-import { env } from './env'
-import { jobs } from './jobs'
-import { log } from './log'
 
 program
   .name('art-of-the-week')
@@ -25,18 +25,40 @@ program
     })
 
     client.on('interactionCreate', async (interaction) => {
-      if (!interaction.isCommand()) return
-      log.info(interaction, 'Command interaction created')
-      const commandName = interaction.commandName
-      const command = client.commands.get(commandName)
+      log.debug(interaction, 'interaction created')
 
-      if (!command) {
-        log.error(interaction, 'Command not found')
-        return interaction.reply({ content: 'Command not found', flags: MessageFlags.Ephemeral })
+      if (interaction.isCommand()) {
+        const commandName = interaction.commandName
+        const command = client.commands.get(commandName)
+
+        if (!command) {
+          log.error(interaction, 'Command not found')
+          return interaction.reply({
+            content: 'Command not found',
+            flags: MessageFlags.Ephemeral,
+          })
+        }
+
+        log.info(command, 'Executing command')
+        await command.execute(interaction as ChatInputCommandInteraction, { client })
+      } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
+        if (!client.interactables.has(interaction.customId)) {
+          log.error(
+            { interaction, interactables: client.interactables.entries() },
+            'Interactable not found',
+          )
+          return interaction.reply({
+            content: 'Interactable not found',
+            flags: MessageFlags.Ephemeral,
+          })
+        }
+        const interactable = client.interactables.get(interaction.customId)!
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- i could fix this, but it doesn't seem worth it.
+        await interactable.execute(interaction as any)
+      } else {
+        log.error(interaction, 'Unknown interaction type')
+        return
       }
-
-      log.info(command, 'Executing command')
-      await command.execute(interaction as ChatInputCommandInteraction, { client })
     })
 
     client.login(env.DISCORD_TOKEN)

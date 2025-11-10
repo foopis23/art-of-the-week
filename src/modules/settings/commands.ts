@@ -1,7 +1,7 @@
+import type { Command } from '@/lib/discord/command'
+import { log } from '@/log'
 import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, SlashCommandBuilder } from 'discord.js'
-import type { Command } from '../../lib/command'
-import { log } from '../../log'
 import { SettingsService } from './service'
 
 export const settingsCommand = {
