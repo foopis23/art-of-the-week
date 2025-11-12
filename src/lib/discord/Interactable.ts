@@ -26,32 +26,40 @@ export type AnySelectMenuBuilder =
   | MentionableSelectMenuBuilder
   | ChannelSelectMenuBuilder
 
-export type Interactable =
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Interactable<T = any> =
   | {
-      data: ButtonBuilder
+      customId: string
+      component: (props: T) => ButtonBuilder
       execute: (interaction: ButtonInteraction) => Promise<void>
     }
   | {
-      data: StringSelectMenuBuilder
+      customId: string
+      component: (props: T) => StringSelectMenuBuilder
       execute: (interaction: StringSelectMenuInteraction) => Promise<void>
     }
   | {
-      data: TextInputBuilder
+      customId: string
+      component: (props: T) => TextInputBuilder
       execute: (interaction: UserSelectMenuInteraction) => Promise<void>
     }
   | {
-      data: RoleSelectMenuBuilder
+      customId: string
+      component: (props: T) => RoleSelectMenuBuilder
       execute: (interaction: RoleSelectMenuInteraction) => Promise<void>
     }
   | {
-      data: MentionableSelectMenuBuilder
+      customId: string
+      component: (props: T) => MentionableSelectMenuBuilder
       execute: (interaction: MentionableSelectMenuInteraction) => Promise<void>
     }
   | {
-      data: ChannelSelectMenuBuilder
+      customId: string
+      component: (props: T) => ChannelSelectMenuBuilder
       execute: (interaction: ChannelSelectMenuInteraction) => Promise<void>
     }
   | {
-      data: ModalBuilder
+      customId: string
+      component: (props: T) => ModalBuilder
       execute: (interaction: ModalSubmitInteraction) => Promise<void>
     }

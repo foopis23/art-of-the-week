@@ -18,23 +18,25 @@ import {
 import { ThemeService } from './service'
 
 export const themeSubmissionModalInteractable = {
-  data: new ModalBuilder()
-    .setCustomId('theme_submission')
-    .setTitle('Upload Submission')
-    .addLabelComponents(
-      new LabelBuilder()
-        .setLabel('Submission')
-        .setFileUploadComponent(new FileUploadBuilder().setCustomId('submissions')),
-      new LabelBuilder()
-        .setLabel('Description')
-        .setDescription('Optional description of the submission')
-        .setTextInputComponent(
-          new TextInputBuilder()
-            .setCustomId('description')
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(false),
-        ),
-    ),
+  customId: 'theme_submission',
+  component: () =>
+    new ModalBuilder()
+      .setCustomId('theme_submission')
+      .setTitle('Upload Submission')
+      .addLabelComponents(
+        new LabelBuilder()
+          .setLabel('Submission')
+          .setFileUploadComponent(new FileUploadBuilder().setCustomId('submissions')),
+        new LabelBuilder()
+          .setLabel('Description')
+          .setDescription('Optional description of the submission')
+          .setTextInputComponent(
+            new TextInputBuilder()
+              .setCustomId('description')
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false),
+          ),
+      ),
   execute: async (interaction: ModalSubmitInteraction) => {
     await interaction.deferReply({
       flags: MessageFlags.Ephemeral,
@@ -63,12 +65,14 @@ export const themeSubmissionModalInteractable = {
 } satisfies Interactable
 
 export const themeSubmissionButtonInteractable = {
-  data: new ButtonBuilder()
-    .setCustomId('open_theme_submission')
-    .setLabel('Upload Submission')
-    .setStyle(ButtonStyle.Primary),
+  customId: 'open_theme_submission',
+  component: () =>
+    new ButtonBuilder()
+      .setCustomId('open_theme_submission')
+      .setLabel('Upload Submission')
+      .setStyle(ButtonStyle.Primary),
   execute: async (interaction: ButtonInteraction) => {
-    await interaction.showModal(themeSubmissionModalInteractable.data)
+    await interaction.showModal(themeSubmissionModalInteractable.component())
   },
 } satisfies Interactable
 
@@ -105,7 +109,7 @@ export const themeAnnouncementTemplate: MessageTemplate<{
         )
         .toJSON(),
       new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(themeSubmissionButtonInteractable.data)
+        .addComponents(themeSubmissionButtonInteractable.component())
         .toJSON(),
       new TextDisplayBuilder()
         .setContent(

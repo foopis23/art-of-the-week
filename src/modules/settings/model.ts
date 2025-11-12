@@ -7,6 +7,14 @@ export namespace SettingsModel {
   export type Model = InferSelectModel<typeof settingsTable>
   export type InsertModel = InferInsertModel<typeof settingsTable>
 
+  export type GeneralSettings = Pick<
+    Model,
+    'themeAnnouncementDay' | 'streaksMode' | 'themeAnnouncementChannelId'
+  >
+  export type SetGeneralSettings = Partial<GeneralSettings> & { guildId: string }
+  export type GoogleDriveSettings = Pick<Model, 'googleDriveFolderURL' | 'googleDriveEnabled'>
+  export type SetGoogleDriveSettings = Partial<GoogleDriveSettings> & { guildId: string }
+
   export async function create(settings: InsertModel) {
     await db.insert(settingsTable).values(settings)
   }
@@ -32,6 +40,68 @@ export namespace SettingsModel {
       .onConflictDoUpdate({
         target: settingsTable.guildId,
         set: { themeAnnouncementChannelId: channelId },
+      })
+  }
+
+  export async function getGeneralSettings({
+    guildId,
+  }: {
+    guildId: string
+  }): Promise<GeneralSettings | null> {
+    return (
+      (
+        await db.select().from(settingsTable).where(eq(settingsTable.guildId, guildId)).limit(1)
+      )[0] ?? null
+    )
+  }
+
+  export async function setGeneralSettings({
+    guildId,
+    themeAnnouncementDay,
+    streaksMode,
+    themeAnnouncementChannelId,
+  }: SetGeneralSettings) {
+    await db
+      .insert(settingsTable)
+      .values({
+        guildId,
+        themeAnnouncementDay: themeAnnouncementDay,
+        streaksMode: streaksMode,
+        themeAnnouncementChannelId: themeAnnouncementChannelId ?? null,
+      })
+      .onConflictDoUpdate({
+        target: settingsTable.guildId,
+        set: { themeAnnouncementDay, streaksMode, themeAnnouncementChannelId },
+      })
+  }
+
+  export async function getGoogleDriveSettings({
+    guildId,
+  }: {
+    guildId: string
+  }): Promise<GoogleDriveSettings | null> {
+    return (
+      (
+        await db.select().from(settingsTable).where(eq(settingsTable.guildId, guildId)).limit(1)
+      )[0] ?? null
+    )
+  }
+
+  export async function setGoogleDriveSettings({
+    guildId,
+    googleDriveFolderURL = null,
+    googleDriveEnabled,
+  }: SetGoogleDriveSettings) {
+    await db
+      .insert(settingsTable)
+      .values({
+        guildId,
+        googleDriveFolderURL: googleDriveFolderURL ?? null,
+        googleDriveEnabled: googleDriveEnabled,
+      })
+      .onConflictDoUpdate({
+        target: settingsTable.guildId,
+        set: { googleDriveFolderURL, googleDriveEnabled },
       })
   }
 }

@@ -15,6 +15,7 @@ export const settingsTable = sqliteTable('settings', {
   themeAnnouncementChannelId: text('theme_announcement_channel_id'),
   themeAnnouncementDay: text('theme_announcement_day').$type<Day>().default('SUN'),
   googleDriveFolderURL: text('google_drive_folder_url'),
+  googleDriveEnabled: integer('google_drive_enabled', { mode: 'boolean' }).default(false).notNull(),
   streaksMode: text('streaks_mode').$type<StreaksMode>().default('disabled').notNull(),
   createdAt: integer('created_at')
     .notNull()
