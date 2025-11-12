@@ -1,5 +1,10 @@
 import { db } from '@/db'
-import { themeAnnouncementTable, themePoolTable, themeSubmissionsTable } from '@/db/schema'
+import {
+  jamsTable,
+  jamSubmissionAttachmentsTable,
+  jamSubmissionTable,
+  themePoolTable,
+} from '@/db/schema'
 import {
   and,
   count,
@@ -12,8 +17,8 @@ import {
 } from 'drizzle-orm'
 
 export namespace ThemePoolModel {
-  export type Model = InferSelectModel<typeof themePoolTable>
-  export type InsertModel = InferInsertModel<typeof themePoolTable>
+  export type Theme = InferSelectModel<typeof themePoolTable>
+  export type InsertTheme = InferInsertModel<typeof themePoolTable>
 
   export async function getRandomForGuild({ guildId }: { guildId: string }) {
     return await db
@@ -67,36 +72,75 @@ export namespace ThemePoolModel {
   }
 }
 
-export namespace ThemeSubmissionModel {
-  export type Model = InferSelectModel<typeof themeSubmissionsTable>
-  export type InsertModel = InferInsertModel<typeof themeSubmissionsTable>
+export namespace JamSubmissionModel {
+  export type JamSubmission = InferSelectModel<typeof jamSubmissionTable>
+  export type InsertJamSubmission = InferInsertModel<typeof jamSubmissionTable>
+  export type JamSubmissionAttachments = InferSelectModel<typeof jamSubmissionAttachmentsTable>
+  export type InsertJamSubmissionAttachment = InferInsertModel<typeof jamSubmissionAttachmentsTable>
 
-  export async function create(themeSubmission: InsertModel) {
-    await db.insert(themeSubmissionsTable).values(themeSubmission)
+  export type JamSubmissionWithAttachments = InferSelectModel<typeof jamSubmissionTable> & {
+    attachments: JamSubmissionAttachments[]
+  }
+
+  export async function create(
+    themeSubmission: InsertJamSubmission,
+    attachments: Omit<InsertJamSubmissionAttachment, 'submissionId'>[],
+  ) {
+    const result = await db
+      .insert(jamSubmissionTable)
+      .values(themeSubmission)
+      .returning({ id: jamSubmissionTable.id })
+
+    if (result.length === 0 || !result[0]?.id) {
+      throw new Error('Failed to create jam submission')
+    }
+
+    const submissionId = result[0].id
+
+    await db
+      .insert(jamSubmissionAttachmentsTable)
+      .values(attachments.map((attachment) => ({ ...attachment, submissionId: submissionId })))
   }
 
   export async function getUserSubmissions({ userId }: { userId: string }) {
-    return await db
-      .select()
-      .from(themeSubmissionsTable)
-      .where(and(eq(themeSubmissionsTable.userId, userId), isNull(themeSubmissionsTable.createdAt)))
-      .orderBy(desc(themeSubmissionsTable.createdAt))
+    return await db.query.jamSubmissionTable.findMany({
+      with: {
+        attachments: true,
+      },
+      where: eq(jamSubmissionTable.userId, userId),
+      orderBy: desc(jamSubmissionTable.createdAt),
+    })
   }
 }
 
-export namespace ThemeAnnouncementModel {
-  export type Model = InferSelectModel<typeof themeAnnouncementTable>
-  export type InsertModel = InferInsertModel<typeof themeAnnouncementTable>
+export namespace JamModel {
+  export type Jam = InferSelectModel<typeof jamsTable>
+  export type InsertJam = InferInsertModel<typeof jamsTable>
 
-  export async function create(themeAnnouncement: InsertModel) {
-    await db.insert(themeAnnouncementTable).values(themeAnnouncement)
+  export async function create(themeAnnouncement: InsertJam) {
+    await db.insert(jamsTable).values(themeAnnouncement)
   }
 
   export async function getByMessageId({ messageId }: { messageId: string }) {
-    return await db
-      .select()
-      .from(themeAnnouncementTable)
-      .where(eq(themeAnnouncementTable.messageId, messageId))
-      .limit(1)
+    return await db.select().from(jamsTable).where(eq(jamsTable.messageId, messageId)).limit(1)
+  }
+
+  export async function getAllJamsWithUserSubmissionForGuild(args: {
+    guildId: string
+    userId: string
+  }) {
+    const { guildId, userId } = args
+
+    return await db.query.jamsTable.findMany({
+      with: {
+        submissions: {
+          columns: {
+            userId: true,
+          },
+        },
+      },
+      where: and(eq(jamsTable.guildId, guildId), eq(jamSubmissionTable.userId, userId)),
+      orderBy: desc(jamsTable.createdAt),
+    })
   }
 }

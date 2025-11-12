@@ -40,3 +40,5 @@ export const DEFAULT_THEME_POOL = [
   'Simple',
   'Broken',
 ]
+
+export const JAM_SUBMISSION_SCORE = 15

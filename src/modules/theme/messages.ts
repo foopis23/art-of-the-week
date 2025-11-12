@@ -1,7 +1,7 @@
 import type { Interactable } from '@/lib/discord/Interactable'
 import type { MessageTemplate } from '@/lib/discord/message'
 import { stripIndents } from 'common-tags'
-import type { Attachment, ButtonInteraction, ModalSubmitInteraction } from 'discord.js'
+import type { Attachment, ButtonInteraction, GuildMember, ModalSubmitInteraction } from 'discord.js'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -53,7 +53,7 @@ export const themeSubmissionModalInteractable = {
         description: interaction.fields.getTextInputValue('description'),
       },
       interaction.message,
-      interaction.member,
+      interaction.member as GuildMember, // this should always be a GuildMember as far as I can tell
     )
 
     await interaction.editReply({

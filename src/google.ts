@@ -1,5 +1,6 @@
 import { google } from 'googleapis'
-import { env } from '../../env'
+import { env } from './env'
+
 const credentials = JSON.parse(env.GOOGLE_CLIENT_CREDENTIALS)
 export const oAuth2Client = new google.auth.OAuth2(
   credentials.installed.client_id,
@@ -7,3 +8,5 @@ export const oAuth2Client = new google.auth.OAuth2(
   credentials.installed.redirect_uris[0],
 )
 oAuth2Client.setCredentials(JSON.parse(env.GOOGLE_ACCESS_TOKEN))
+
+export const drive = google.drive({ version: 'v3', auth: oAuth2Client })

@@ -1,4 +1,4 @@
-import { drive } from '@/lib/google/drive'
+import { drive } from '@/google'
 import type { Attachment } from 'discord.js'
 
 export abstract class GoogleDriveService {
