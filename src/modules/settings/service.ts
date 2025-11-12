@@ -3,7 +3,7 @@ import type { Day } from '@/lib/date'
 import type { SettingsModel } from './model'
 
 export abstract class SettingsService {
-  private static createDefaultSettingsObject(guildId: string): SettingsModel.GuildSettings {
+  private static createDefaultSettingsObject(guildId: string): SettingsModel.Model {
     return {
       guildId,
       themeAnnouncementChannelId: null,
@@ -12,7 +12,7 @@ export abstract class SettingsService {
     }
   }
 
-  static async getGuildSettings(guildId: string): Promise<SettingsModel.GuildSettings> {
+  static async getGuildSettings(guildId: string): Promise<SettingsModel.Model> {
     const settings = await data.guildSettings.getByGuildId({ guildId })
     if (settings.length === 0 || !settings[0]) {
       const defaultSettings = this.createDefaultSettingsObject(guildId)
@@ -22,7 +22,7 @@ export abstract class SettingsService {
     return settings[0]
   }
 
-  static async getAllByThemeAnnouncementDay(day: Day): Promise<SettingsModel.GuildSettings[]> {
+  static async getAllByThemeAnnouncementDay(day: Day): Promise<SettingsModel.Model[]> {
     return await data.guildSettings.getAllByThemeAnnouncementDay({ day })
   }
 
