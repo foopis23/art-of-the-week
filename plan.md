@@ -50,6 +50,7 @@ Each week, we will generate a theme for art creation. Participants will create a
   - [x] Open Modal on Button Press
   - [x] Handle Modal Submission
 - [x] Create schema for tracking submissions (user id, nickname, theme id, attachment link, timestamp)
+- [ ] Implement Google Drive Setup Process
 - [ ] Setup Google Drive folder creation when theme is generated "Theme Name - DD/MM/YY"
 - [ ] Upload attachments to the corresponding Google Drive folder
 - [ ] Update submission tracking in the database
@@ -58,7 +59,3 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [ ] Testing and debugging
 - [ ] Deploy
 - [ ] Documentation
-
-
-weeklyarttheme@gmail.com
-blasB^0zpLd1#&
