@@ -107,7 +107,7 @@ export abstract class ThemeService {
     await this.sendThemeChannelMessage(
       message.guildId!,
       message.channelId!,
-      themeSubmissionMessageTemplate({ theme: jamId, submissions, description }),
+      themeSubmissionMessageTemplate({ jam, submission }),
     )
   }
 
@@ -156,6 +156,7 @@ export abstract class ThemeService {
       guildId: guildSettings.guildId,
       theme,
       messageId: message.id,
+      messageLink: message.url,
       deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).getTime(),
     })
 

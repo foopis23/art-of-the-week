@@ -45,6 +45,7 @@ export const jamsTable = sqliteTable(
     guildId: text('guild_id').notNull(),
     theme: text('theme').notNull(),
     messageId: text('message_id').notNull(),
+    messageLink: text('message_link').notNull(),
     deadline: integer('deadline').notNull(),
     themeSubmissionFolderId: text('theme_submission_folder_id'),
     createdAt: integer('created_at')

@@ -1,7 +1,7 @@
 import type { Interactable } from '@/lib/discord/Interactable'
 import type { MessageTemplate } from '@/lib/discord/message'
 import { stripIndents } from 'common-tags'
-import type { Attachment, ButtonInteraction, GuildMember, ModalSubmitInteraction } from 'discord.js'
+import type { ButtonInteraction, GuildMember, ModalSubmitInteraction } from 'discord.js'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -16,6 +16,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js'
+import type { JamModel, JamSubmissionModel } from './model'
 import { ThemeService } from './service'
 
 export const themeSubmissionModalInteractable = {
@@ -134,23 +135,29 @@ export const themeAnnouncementTemplate: MessageTemplate<{
 }
 
 export const themeSubmissionMessageTemplate: MessageTemplate<{
-  theme: string
-  submissions: Attachment[]
-  description: string | undefined
+  jam: JamModel.Jam
+  submission: JamSubmissionModel.JamSubmissionWithAttachments
 }> = (props) => {
-  const { theme, submissions, description } = props
+  const { jam, submission } = props
 
   const mediaGallery = new MediaGalleryBuilder()
-  for (const submission of submissions) {
-    mediaGallery.addItems(new MediaGalleryItemBuilder().setURL(submission.url))
+  for (const attachment of submission.attachments) {
+    mediaGallery.addItems(new MediaGalleryItemBuilder().setURL(attachment.url))
   }
+
+  const title = submission.title ? `# ${submission.title}\n` : ''
+  const dateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const subtitle = `-# <@${submission.userId}>'s submission for [[${dateString} ${jam.theme}](${jam.messageLink})]\n\n`
+  const description = submission.description ? `${submission.description}\n\n` : ''
 
   return {
     flags: MessageFlags.IsComponentsV2,
     components: [
-      new TextDisplayBuilder().setContent(
-        stripIndents`Submission test for ${theme}\n${description}\n${submissions.map((submission) => submission.url).join('\n')}`,
-      ),
+      new TextDisplayBuilder().setContent(stripIndents`${title}${subtitle}${description}`),
       mediaGallery,
     ],
   }

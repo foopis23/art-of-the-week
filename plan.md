@@ -58,4 +58,5 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [ ] Dockerize the bot
 - [ ] Testing and debugging
 - [ ] Deploy
+- [ ] Add PostHog Error Tracking and Analytics
 - [ ] Documentation
