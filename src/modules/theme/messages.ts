@@ -97,12 +97,12 @@ export const themeAnnouncementTemplate: MessageTemplate<{
   const date = new Date()
   const deadline = new Date(date.getTime() + 1000 * 60 * 60 * 24 * 7)
   const dateString = date.toLocaleDateString('en-US', {
-    month: 'long',
+    month: 'numeric',
     day: 'numeric',
     year: 'numeric',
   })
   const deadlineString = deadline.toLocaleDateString('en-US', {
-    month: 'long',
+    month: 'numeric',
     day: 'numeric',
     year: 'numeric',
   })
@@ -147,7 +147,7 @@ export const themeSubmissionMessageTemplate: MessageTemplate<{
 
   const title = submission.title ? `# ${submission.title}\n` : ''
   const dateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
-    month: 'long',
+    month: 'numeric',
     day: 'numeric',
     year: 'numeric',
   })
