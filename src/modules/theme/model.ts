@@ -86,20 +86,26 @@ export namespace JamSubmissionModel {
     themeSubmission: InsertJamSubmission,
     attachments: Omit<InsertJamSubmissionAttachment, 'submissionId'>[],
   ) {
-    const result = await db
-      .insert(jamSubmissionTable)
-      .values(themeSubmission)
-      .returning({ id: jamSubmissionTable.id })
+    const result = await db.insert(jamSubmissionTable).values(themeSubmission).returning()
 
     if (result.length === 0 || !result[0]?.id) {
       throw new Error('Failed to create jam submission')
     }
 
-    const submissionId = result[0].id
+    const submission = result[0]
+    if (!submission) {
+      throw new Error('Failed to create jam submission')
+    }
 
-    await db
+    const jamSubmissionAttachments = await db
       .insert(jamSubmissionAttachmentsTable)
-      .values(attachments.map((attachment) => ({ ...attachment, submissionId: submissionId })))
+      .values(attachments.map((attachment) => ({ ...attachment, submissionId: submission.id })))
+      .returning()
+
+    return {
+      ...submission,
+      attachments: jamSubmissionAttachments,
+    }
   }
 
   export async function getUserSubmissions({ userId }: { userId: string }) {
@@ -110,6 +116,19 @@ export namespace JamSubmissionModel {
       where: eq(jamSubmissionTable.userId, userId),
       orderBy: desc(jamSubmissionTable.createdAt),
     })
+  }
+
+  export async function updateAttachmentsGoogleDriveFileId({
+    submissionAttachmentId,
+    googleDriveFileId,
+  }: {
+    submissionAttachmentId: string
+    googleDriveFileId: string
+  }) {
+    return await db
+      .update(jamSubmissionAttachmentsTable)
+      .set({ googleDriveFileId: googleDriveFileId })
+      .where(eq(jamSubmissionAttachmentsTable.id, submissionAttachmentId))
   }
 }
 

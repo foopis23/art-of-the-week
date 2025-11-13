@@ -57,7 +57,7 @@ export abstract class ThemeService {
 
     const guildSettings = await SettingsService.getGuildSettings(message.guildId!)
 
-    await JamSubmissionModel.create(
+    const submission = await JamSubmissionModel.create(
       {
         guildId: message.guildId!,
         userId: user.id,
@@ -67,6 +67,8 @@ export abstract class ThemeService {
       },
       submissions.map((submission) => ({
         url: submission.url,
+        contentType: submission.contentType ?? '',
+        name: submission.name,
       })),
     )
 
@@ -81,11 +83,20 @@ export abstract class ThemeService {
         if (!themeResult[0].themeSubmissionFolderId) {
           throw new Error('Theme submission folder id not found')
         }
+        const themeSubmissionFolderId = themeResult[0].themeSubmissionFolderId
 
-        await GoogleDriveService.uploadAttachmentToGoogleDriveFolder(
-          submissions,
-          user.nickname ?? user.user.username,
-          themeResult[0].themeSubmissionFolderId,
+        await Promise.all(
+          submission.attachments.map(async (attachment) => {
+            const id = await GoogleDriveService.uploadAttachmentToGoogleDriveFolder(
+              attachment,
+              user.nickname ?? user.user.username,
+              themeSubmissionFolderId,
+            )
+            await JamSubmissionModel.updateAttachmentsGoogleDriveFileId({
+              submissionAttachmentId: attachment.id,
+              googleDriveFileId: id,
+            })
+          }),
         )
       }
     }

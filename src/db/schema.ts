@@ -82,7 +82,10 @@ export const jamSubmissionAttachmentsTable = sqliteTable('jam_submission_attachm
     .$default(() => crypto.randomUUID())
     .notNull(),
   submissionId: text('submission_id').notNull(),
+  name: text('name').notNull(),
   url: text('file_url').notNull(),
+  contentType: text('content_type').notNull(),
+  googleDriveFileId: text('google_drive_file_id'),
   createdAt: integer('created_at')
     .notNull()
     .$default(() => new Date().getTime()),

@@ -1,37 +1,42 @@
 import { drive } from '@/google'
-import type { Attachment } from 'discord.js'
 import { Readable } from 'node:stream'
 
 export abstract class GoogleDriveService {
   static async uploadAttachmentToGoogleDriveFolder(
-    attachments: Attachment[],
+    attachment: {
+      url: string
+      contentType: string
+      name: string
+    },
     username: string,
     parent_directory_id: string,
   ) {
-    return await Promise.all(
-      attachments.map(async (attachment) => {
-        const body = await fetch(attachment.url).then((response) => response.body)
-        if (!body) {
-          throw new Error('Failed to fetch attachment body')
-        }
+    const body = await fetch(attachment.url).then((response) => response.body)
+    if (!body) {
+      throw new Error('Failed to fetch attachment body')
+    }
 
-        if (!attachment.contentType) {
-          throw new Error('Attachment content type not found')
-        }
+    if (!attachment.contentType) {
+      throw new Error('Attachment content type not found')
+    }
 
-        return drive.files.create({
-          requestBody: {
-            name: `${username} - ${attachment.name}`,
-            parents: [parent_directory_id],
-          },
-          media: {
-            mimeType: attachment.contentType,
-            body: Readable.from(body),
-          },
-          fields: 'id',
-        })
-      }),
-    )
+    const result = await drive.files.create({
+      requestBody: {
+        name: `${username} - ${attachment.name}`,
+        parents: [parent_directory_id],
+      },
+      media: {
+        mimeType: attachment.contentType,
+        body: Readable.from(body),
+      },
+      fields: 'id',
+    })
+
+    if (!result.data.id) {
+      throw new Error('Failed to upload attachment to Google Drive folder')
+    }
+
+    return result.data.id
   }
 
   static async createThemeSubmissionFolder(theme: string, date: Date, parent_directory_id: string) {
@@ -60,5 +65,9 @@ export abstract class GoogleDriveService {
       throw new Error('Failed to parse folder id from url')
     }
     return match[1]
+  }
+
+  static createFileURLFromFileId(fileId: string): string {
+    return `https://drive.google.com/file/d/${fileId}/view`
   }
 }
