@@ -137,7 +137,13 @@ export namespace JamModel {
   export type InsertJam = InferInsertModel<typeof jamsTable>
 
   export async function create(themeAnnouncement: InsertJam) {
-    await db.insert(jamsTable).values(themeAnnouncement)
+    const result = await db.insert(jamsTable).values(themeAnnouncement).returning()
+
+    if (result.length === 0 || !result[0]?.id) {
+      throw new Error('Failed to create jam')
+    }
+
+    return result[0]
   }
 
   export async function getByMessageId({ messageId }: { messageId: string }) {
@@ -161,5 +167,18 @@ export namespace JamModel {
       where: and(eq(jamsTable.guildId, guildId), eq(jamSubmissionTable.userId, userId)),
       orderBy: desc(jamsTable.createdAt),
     })
+  }
+
+  export async function updateThemeSubmissionFolderId({
+    jamId,
+    themeSubmissionFolderId,
+  }: {
+    jamId: string
+    themeSubmissionFolderId: string
+  }) {
+    return await db
+      .update(jamsTable)
+      .set({ themeSubmissionFolderId: themeSubmissionFolderId })
+      .where(eq(jamsTable.id, jamId))
   }
 }
