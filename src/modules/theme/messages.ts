@@ -6,9 +6,10 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  FileBuilder,
   FileUploadBuilder,
   LabelBuilder,
+  MediaGalleryBuilder,
+  MediaGalleryItemBuilder,
   MessageFlags,
   ModalBuilder,
   TextDisplayBuilder,
@@ -26,7 +27,9 @@ export const themeSubmissionModalInteractable = {
       .addLabelComponents(
         new LabelBuilder()
           .setLabel('Submission')
-          .setFileUploadComponent(new FileUploadBuilder().setCustomId('submissions')),
+          .setFileUploadComponent(
+            new FileUploadBuilder().setCustomId('submissions').setMaxValues(10),
+          ),
         new LabelBuilder()
           .setLabel('Description')
           .setDescription('Optional description of the submission')
@@ -127,13 +130,18 @@ export const themeSubmissionMessageTemplate: MessageTemplate<{
 }> = (props) => {
   const { theme, submissions, description } = props
 
+  const mediaGallery = new MediaGalleryBuilder()
+  for (const submission of submissions) {
+    mediaGallery.addItems(new MediaGalleryItemBuilder().setURL(submission.url))
+  }
+
   return {
     flags: MessageFlags.IsComponentsV2,
     components: [
       new TextDisplayBuilder().setContent(
         stripIndents`Submission test for ${theme}\n${description}\n${submissions.map((submission) => submission.url).join('\n')}`,
       ),
-      ...submissions.map((submission) => new FileBuilder().setURL(submission.url)),
+      mediaGallery,
     ],
   }
 }

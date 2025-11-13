@@ -10,6 +10,7 @@ import {
   type MessageCreateOptions,
   type MessagePayload,
 } from 'discord.js'
+import { GoogleDriveService } from '../google-drive/service'
 import type { SettingsModel } from '../settings/model'
 import { themeAnnouncementTemplate, themeSubmissionMessageTemplate } from './messages'
 import { JamModel, JamSubmissionModel, ThemePoolModel } from './model'
@@ -54,6 +55,8 @@ export abstract class ThemeService {
     }
     const themeId = themeResult[0].id
 
+    const guildSettings = await SettingsService.getGuildSettings(message.guildId!)
+
     await JamSubmissionModel.create(
       {
         guildId: message.guildId!,
@@ -66,6 +69,26 @@ export abstract class ThemeService {
         url: submission.url,
       })),
     )
+
+    if (guildSettings.googleDriveEnabled) {
+      if (!guildSettings.googleDriveFolderURL) {
+        await this.sendThemeChannelMessage(
+          message.guildId!,
+          message.channelId!,
+          'ERROR: Google Drive enabled but no folder URL configured',
+        )
+      } else {
+        if (!themeResult[0].themeSubmissionFolderId) {
+          throw new Error('Theme submission folder id not found')
+        }
+
+        await GoogleDriveService.uploadAttachmentToGoogleDriveFolder(
+          submissions,
+          user.nickname ?? user.user.username,
+          themeResult[0].themeSubmissionFolderId,
+        )
+      }
+    }
 
     await this.sendThemeChannelMessage(
       message.guildId!,
@@ -114,11 +137,39 @@ export abstract class ThemeService {
       themeAnnouncementTemplate({ theme }),
     )
 
+    let themeSubmissionFolderId: string | undefined = undefined
+    if (guildSettings.googleDriveEnabled) {
+      if (!guildSettings.googleDriveFolderURL) {
+        await this.sendThemeChannelMessage(
+          message.guildId!,
+          message.channelId!,
+          'ERROR: Google Drive enabled but no folder URL configured',
+        )
+      }
+
+      if (!guildSettings.googleDriveFolderURL) {
+        throw new Error('Google Drive folder URL not found')
+      }
+
+      const folderId = await GoogleDriveService.createThemeSubmissionFolder(
+        theme,
+        new Date(),
+        GoogleDriveService.parseFolderIdFromUrl(guildSettings.googleDriveFolderURL!),
+      )
+
+      if (!folderId) {
+        throw new Error('Failed to create theme submission folder')
+      }
+
+      themeSubmissionFolderId = folderId
+    }
+
     await JamModel.create({
       guildId: guildSettings.guildId,
       theme,
       messageId: message.id,
       deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).getTime(),
+      themeSubmissionFolderId,
     })
 
     return theme

@@ -46,6 +46,7 @@ export const jamsTable = sqliteTable(
     theme: text('theme').notNull(),
     messageId: text('message_id').notNull(),
     deadline: integer('deadline').notNull(),
+    themeSubmissionFolderId: text('theme_submission_folder_id'),
     createdAt: integer('created_at')
       .notNull()
       .$default(() => new Date().getTime()),
