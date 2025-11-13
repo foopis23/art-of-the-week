@@ -1,14 +1,14 @@
 import type { Job } from '@/lib/job'
-import { ThemeService } from '@/modules/theme/service'
+import { JamService } from '@/modules/jams/service'
 
-export const themeJobs: Job[] = [
+export const jamJobs: Job[] = [
   {
     schedule: '0 15 * * *',
     options: {
       name: 'Theme Announcement',
     },
     execute: async () => {
-      await ThemeService.generateThemeForAllGuilds()
+      await JamService.generateThemeForAllGuilds()
     },
   },
 ]

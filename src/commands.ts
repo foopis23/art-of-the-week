@@ -1,5 +1,4 @@
-import { pingCommands } from '@/modules/ping/commands'
+import { themeCommands } from '@/modules/jams/commands'
 import { settingsCommands } from '@/modules/settings/commands'
-import { themeCommands } from '@/modules/theme/commands'
 
-export const commands = [...pingCommands, ...themeCommands, ...settingsCommands]
+export const commands = [...themeCommands, ...settingsCommands]

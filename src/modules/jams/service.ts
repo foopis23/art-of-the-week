@@ -1,8 +1,8 @@
 import { client } from '@/client'
 import { getCurrentDayOfTheWeek } from '@/lib/date'
 import { log } from '@/log'
+import { DEFAULT_THEME_POOL, JAM_SUBMISSION_SCORE } from '@/modules/jams/const'
 import { SettingsService } from '@/modules/settings/service'
-import { DEFAULT_THEME_POOL, JAM_SUBMISSION_SCORE } from '@/modules/theme/const'
 import {
   type Attachment,
   type GuildMember,
@@ -12,10 +12,10 @@ import {
 } from 'discord.js'
 import { GoogleDriveService } from '../google-drive/service'
 import type { SettingsModel } from '../settings/model'
-import { themeAnnouncementTemplate, themeSubmissionMessageTemplate } from './messages'
+import { jamAnnouncementTemplate, jamSubmissionMessageTemplate } from './messages'
 import { JamModel, JamSubmissionModel, ThemePoolModel } from './model'
 
-export abstract class ThemeService {
+export abstract class JamService {
   /**
    * Generate a theme for all guilds that have a theme announcement channel and the current day of the week is the same as the theme announcement day.
    */
@@ -107,7 +107,7 @@ export abstract class ThemeService {
     await this.sendThemeChannelMessage(
       message.guildId!,
       message.channelId!,
-      themeSubmissionMessageTemplate({ jam, submission }),
+      jamSubmissionMessageTemplate({ jam, submission }),
     )
   }
 
@@ -149,7 +149,7 @@ export abstract class ThemeService {
     const message = await this.sendThemeChannelMessage(
       guildSettings.guildId,
       guildSettings.themeAnnouncementChannelId!,
-      themeAnnouncementTemplate({ theme }),
+      jamAnnouncementTemplate({ theme }),
     )
 
     const jam = await JamModel.create({

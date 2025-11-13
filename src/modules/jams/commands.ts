@@ -1,5 +1,5 @@
 import type { Command } from '@/lib/discord/command'
-import { ThemeService } from '@/modules/theme/service'
+import { JamService } from '@/modules/jams/service'
 import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, SlashCommandBuilder } from 'discord.js'
 
@@ -18,7 +18,7 @@ export const generateThemeCommand = {
       flags: MessageFlags.Ephemeral,
     })
 
-    const result = await ThemeService.forceGenerateThemeForGuild(interaction.guild.id)
+    const result = await JamService.forceGenerateThemeForGuild(interaction.guild.id)
     if (result instanceof Error) {
       await interaction.editReply({
         content: `Error generating theme: ${result.message}`,

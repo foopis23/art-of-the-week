@@ -1,3 +1,3 @@
-import { themeJobs } from '@/modules/theme/jobs'
+import { jamJobs } from '@/modules/jams/jobs'
 
-export const jobs = [...themeJobs]
+export const jobs = [...jamJobs]

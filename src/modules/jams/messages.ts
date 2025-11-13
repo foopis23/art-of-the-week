@@ -17,9 +17,9 @@ import {
   TextInputStyle,
 } from 'discord.js'
 import type { JamModel, JamSubmissionModel } from './model'
-import { ThemeService } from './service'
+import { JamService } from './service'
 
-export const themeSubmissionModalInteractable = {
+export const jamSubmissionModalInteractable = {
   customId: 'theme_submission',
   component: () =>
     new ModalBuilder()
@@ -62,7 +62,7 @@ export const themeSubmissionModalInteractable = {
       return
     }
 
-    await ThemeService.handleThemeSubmission(
+    await JamService.handleThemeSubmission(
       {
         submissions: interaction.fields.getUploadedFiles('submissions')?.values().toArray() ?? [],
         description: interaction.fields.getTextInputValue('description'),
@@ -78,7 +78,7 @@ export const themeSubmissionModalInteractable = {
   },
 } satisfies Interactable
 
-export const themeSubmissionButtonInteractable = {
+export const jamSubmissionButtonInteractable = {
   customId: 'open_theme_submission',
   component: () =>
     new ButtonBuilder()
@@ -86,11 +86,11 @@ export const themeSubmissionButtonInteractable = {
       .setLabel('Upload Submission')
       .setStyle(ButtonStyle.Primary),
   execute: async (interaction: ButtonInteraction) => {
-    await interaction.showModal(themeSubmissionModalInteractable.component())
+    await interaction.showModal(jamSubmissionModalInteractable.component())
   },
 } satisfies Interactable
 
-export const themeAnnouncementTemplate: MessageTemplate<{
+export const jamAnnouncementTemplate: MessageTemplate<{
   theme: string
 }> = (props) => {
   const { theme } = props
@@ -123,7 +123,7 @@ export const themeAnnouncementTemplate: MessageTemplate<{
         )
         .toJSON(),
       new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(themeSubmissionButtonInteractable.component())
+        .addComponents(jamSubmissionButtonInteractable.component())
         .toJSON(),
       new TextDisplayBuilder()
         .setContent(
@@ -134,7 +134,7 @@ export const themeAnnouncementTemplate: MessageTemplate<{
   }
 }
 
-export const themeSubmissionMessageTemplate: MessageTemplate<{
+export const jamSubmissionMessageTemplate: MessageTemplate<{
   jam: JamModel.Jam
   submission: JamSubmissionModel.JamSubmissionWithAttachments
 }> = (props) => {
@@ -163,7 +163,7 @@ export const themeSubmissionMessageTemplate: MessageTemplate<{
   }
 }
 
-export const themeInteractables: Interactable[] = [
-  themeSubmissionModalInteractable,
-  themeSubmissionButtonInteractable,
+export const jamInteractables: Interactable[] = [
+  jamSubmissionModalInteractable,
+  jamSubmissionButtonInteractable,
 ]
