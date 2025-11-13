@@ -42,12 +42,13 @@ export abstract class ThemeService {
   static async handleThemeSubmission(
     fields: {
       submissions: Attachment[]
-      description: string
+      description: string | undefined
+      title: string | undefined
     },
     message: Message,
     user: GuildMember,
   ) {
-    const { submissions, description } = fields
+    const { submissions, description, title } = fields
     const jamResults = await JamModel.getByMessageId({ messageId: message.id })
 
     if (jamResults.length === 0 || !jamResults[0]) {
@@ -65,6 +66,7 @@ export abstract class ThemeService {
         username: user.nickname ?? user.user.username,
         themeId: jamId,
         description,
+        title,
       },
       submissions.map((submission) => ({
         url: submission.url,

@@ -65,6 +65,7 @@ export const jamSubmissionTable = sqliteTable(
     userId: text('user_id').notNull(),
     username: text('username').notNull(),
     themeId: text('theme_id').notNull(),
+    title: text('title'),
     description: text('description'),
     createdAt: integer('created_at')
       .notNull()

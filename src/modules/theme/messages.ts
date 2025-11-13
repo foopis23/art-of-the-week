@@ -31,6 +31,15 @@ export const themeSubmissionModalInteractable = {
             new FileUploadBuilder().setCustomId('submissions').setMaxValues(10),
           ),
         new LabelBuilder()
+          .setLabel('Title')
+          .setDescription('Optional title of the submission')
+          .setTextInputComponent(
+            new TextInputBuilder()
+              .setCustomId('title')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false),
+          ),
+        new LabelBuilder()
           .setLabel('Description')
           .setDescription('Optional description of the submission')
           .setTextInputComponent(
@@ -56,6 +65,7 @@ export const themeSubmissionModalInteractable = {
       {
         submissions: interaction.fields.getUploadedFiles('submissions')?.values().toArray() ?? [],
         description: interaction.fields.getTextInputValue('description'),
+        title: interaction.fields.getTextInputValue('title') ?? undefined,
       },
       interaction.message,
       interaction.member as GuildMember, // this should always be a GuildMember as far as I can tell
@@ -126,7 +136,7 @@ export const themeAnnouncementTemplate: MessageTemplate<{
 export const themeSubmissionMessageTemplate: MessageTemplate<{
   theme: string
   submissions: Attachment[]
-  description: string
+  description: string | undefined
 }> = (props) => {
   const { theme, submissions, description } = props
 
