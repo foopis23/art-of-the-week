@@ -51,10 +51,10 @@ Each week, we will generate a theme for art creation. Participants will create a
   - [x] Handle Modal Submission
 - [x] Create schema for tracking submissions (user id, nickname, theme id, attachment link, timestamp)
 - [x] Implement Google Drive Setup Process
-- [ ] Setup Google Drive folder creation when theme is generated "Theme Name - DD/MM/YY"
-- [ ] Upload attachments to the corresponding Google Drive folder
-- [ ] Update submission tracking in the database
-- [ ] Create schema for tracking themes generated (date, theme, folder_id, message_id)
+- [x] Setup Google Drive folder creation when theme is generated "Theme Name - DD/MM/YY"
+- [x] Upload attachments to the corresponding Google Drive folder
+- [x] Update submission tracking in the database
+- [x] Create schema for tracking themes generated (date, theme, folder_id, message_id)
 - [ ] Dockerize the bot
 - [ ] Testing and debugging
 - [ ] Deploy
