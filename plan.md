@@ -58,7 +58,7 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [ ] Testing and debugging
   - [x] Fixed Google Drive Upload Edge Cases
   - [x] Fixed Date Formats
-  - [ ] Fix Deadline date calculation (use cron schedule to figure out when next announcement is)
+  - [x] Fix Deadline date calculation (use cron schedule to figure out when next announcement is)
 - [ ] Add midweek reminder messages
 - [ ] Add jam recap message
 - [ ] Dockerize the bot
