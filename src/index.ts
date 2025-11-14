@@ -28,33 +28,41 @@ program
       log.debug(interaction, 'interaction created')
 
       if (interaction.isCommand()) {
-        const commandName = interaction.commandName
-        const command = client.commands.get(commandName)
+        try {
+          const commandName = interaction.commandName
+          const command = client.commands.get(commandName)
 
-        if (!command) {
-          log.error(interaction, 'Command not found')
-          return interaction.reply({
-            content: 'Command not found',
-            flags: MessageFlags.Ephemeral,
-          })
+          if (!command) {
+            log.error(interaction, 'Command not found')
+            return interaction.reply({
+              content: 'Command not found',
+              flags: MessageFlags.Ephemeral,
+            })
+          }
+
+          log.info(command, 'Executing command')
+          await command.execute(interaction as ChatInputCommandInteraction, { client })
+        } catch (error) {
+          log.error(error, 'Uncaught error executing command')
         }
-
-        log.info(command, 'Executing command')
-        await command.execute(interaction as ChatInputCommandInteraction, { client })
       } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
-        if (!client.interactables.has(interaction.customId)) {
-          log.error(
-            { interaction, interactables: client.interactables.entries() },
-            'Interactable not found',
-          )
-          return interaction.reply({
-            content: 'Interactable not found',
-            flags: MessageFlags.Ephemeral,
-          })
+        try {
+          if (!client.interactables.has(interaction.customId)) {
+            log.error(
+              { interaction, interactables: client.interactables.entries() },
+              'Interactable not found',
+            )
+            return interaction.reply({
+              content: 'Interactable not found',
+              flags: MessageFlags.Ephemeral,
+            })
+          }
+          const interactable = client.interactables.get(interaction.customId)!
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- i could fix this, but it doesn't seem worth it.
+          await interactable.execute(interaction as any)
+        } catch (error) {
+          log.error(error, 'Uncaught error executing interactable')
         }
-        const interactable = client.interactables.get(interaction.customId)!
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- i could fix this, but it doesn't seem worth it.
-        await interactable.execute(interaction as any)
       } else {
         log.error(interaction, 'Unknown interaction type')
         return
