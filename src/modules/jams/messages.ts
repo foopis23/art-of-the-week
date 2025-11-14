@@ -145,14 +145,14 @@ export const jamSubmissionMessageTemplate: MessageTemplate<{
     mediaGallery.addItems(new MediaGalleryItemBuilder().setURL(attachment.url))
   }
 
-  const title = submission.title ? `# ${submission.title}\n` : ''
+  const title = submission.title ? `#  — ${submission.title} - \n` : ''
   const dateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',
     year: 'numeric',
   })
-  const subtitle = `-# <@${submission.userId}>'s submission for [[${dateString} ${jam.theme}](${jam.messageLink})]\n\n`
   const description = submission.description ? `${submission.description}\n\n` : ''
+  const subtitle = `-# <@${submission.userId}>'s submission for [[${dateString}-${jam.theme}](${jam.messageLink})]\n\n`
 
   return {
     flags: MessageFlags.IsComponentsV2,
