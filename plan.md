@@ -55,11 +55,11 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [x] Upload attachments to the corresponding Google Drive folder
 - [x] Update submission tracking in the database
 - [x] Create schema for tracking themes generated (date, theme, folder_id, message_id)
-- [ ] Testing and debugging
+- [x] Testing and debugging
   - [x] Fixed Google Drive Upload Edge Cases
   - [x] Fixed Date Formats
   - [x] Fix Deadline date calculation (use cron schedule to figure out when next announcement is)
-- [ ] Add midweek reminder messages
+- [x] Add midweek reminder messages
 - [ ] Add jam recap message
 - [ ] Dockerize the bot
 - [ ] Deploy
