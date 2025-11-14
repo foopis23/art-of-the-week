@@ -1,6 +1,10 @@
 # Use official Bun image
 FROM oven/bun:1
 
+# Install tini for proper signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends tini && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy package files
@@ -23,6 +27,6 @@ RUN chmod +x /app/docker-entrypoint.sh && chown bun:bun /app/docker-entrypoint.s
 # Set environment to production
 ENV NODE_ENV=production
 
-# Run the bot via entrypoint script
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Use tini as entrypoint for proper signal handling
+ENTRYPOINT ["/usr/bin/tini", "--", "/app/docker-entrypoint.sh"]
 
