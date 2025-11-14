@@ -15,6 +15,10 @@ export namespace SettingsModel {
   export type GoogleDriveSettings = Pick<Model, 'googleDriveFolderURL' | 'googleDriveEnabled'>
   export type SetGoogleDriveSettings = Partial<GoogleDriveSettings> & { guildId: string }
 
+  export async function getAll() {
+    return await db.select().from(settingsTable)
+  }
+
   export async function create(settings: InsertModel) {
     await db.insert(settingsTable).values(settings)
   }

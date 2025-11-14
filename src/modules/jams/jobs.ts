@@ -8,7 +8,16 @@ export const jamJobs: Job[] = [
       name: 'Theme Announcement',
     },
     execute: async () => {
-      await JamService.generateThemeForAllGuilds()
+      await JamService.generateJamForAnyScheduledGuilds()
+    },
+  },
+  {
+    schedule: '0 15 * * *',
+    options: {
+      name: 'Midweek Reminder',
+    },
+    execute: async () => {
+      await JamService.sendMidweekReminderForAllScheduledGuilds()
     },
   },
 ]

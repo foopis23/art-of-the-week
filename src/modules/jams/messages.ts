@@ -160,6 +160,31 @@ export const jamSubmissionMessageTemplate: MessageTemplate<{
   }
 }
 
+export const jamMidweekReminderTemplate: MessageTemplate<{
+  jam: JamModel.Jam
+}> = (props) => {
+  const { jam } = props
+
+  const deadline = new Date(jam.deadline)
+  const deadlineString = deadline.toLocaleDateString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  return {
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      new TextDisplayBuilder().setContent(stripIndents`
+        # —Reminder—
+        For Art Jam [[${jam.theme}](${jam.messageLink})]
+
+        Submission deadline is ${deadlineString}, 11:59pm.
+      `),
+    ],
+  }
+}
+
 export const jamInteractables: Interactable[] = [
   jamSubmissionModalInteractable,
   jamSubmissionButtonInteractable,

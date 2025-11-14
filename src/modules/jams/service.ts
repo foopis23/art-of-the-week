@@ -13,28 +13,76 @@ import {
 } from 'discord.js'
 import { GoogleDriveService } from '../google-drive/service'
 import type { SettingsModel } from '../settings/model'
-import { jamAnnouncementTemplate, jamSubmissionMessageTemplate } from './messages'
+import {
+  jamAnnouncementTemplate,
+  jamMidweekReminderTemplate,
+  jamSubmissionMessageTemplate,
+} from './messages'
 import { JamModel, JamSubmissionModel, ThemePoolModel } from './model'
 
 export abstract class JamService {
   /**
-   * Generate a theme for all guilds that have a theme announcement channel and the current day of the week is the same as the theme announcement day.
+   * Generate a jam for all guilds where theme announcement channel exists and
+   * the current day of the week is the same as the theme announcement day.
    */
-  static async generateThemeForAllGuilds(): Promise<void> {
+  static async generateJamForAnyScheduledGuilds(): Promise<void> {
     const currentDayOfTheWeek = getCurrentDayOfTheWeek()
     const allGuildSettings = await SettingsService.getAllByThemeAnnouncementDay(currentDayOfTheWeek)
 
     for (const guildSettings of allGuildSettings) {
-      await this.generateThemeForGuild(guildSettings)
+      await this.createJamForGuild(guildSettings)
     }
   }
 
   /**
    * Force generate a theme for a guild.
    */
-  static async forceGenerateThemeForGuild(guildId: string): Promise<void | Error> {
+  static async forceGenerateJamForGuild(guildId: string): Promise<void | Error> {
     const guildSettings = await SettingsService.getGuildSettings(guildId)
-    await this.generateThemeForGuild(guildSettings)
+    await this.createJamForGuild(guildSettings)
+  }
+
+  /**
+   * Create a jam for a guild.
+   *
+   * @param guildSettings - The guild settings to create a jam for.
+   * @returns The theme of the jam.
+   */
+  private static async createJamForGuild(guildSettings: SettingsModel.Model): Promise<string> {
+    if (!guildSettings.themeAnnouncementChannelId) {
+      throw new Error('Theme announcement channel not found')
+    }
+
+    const theme = await this.generateRandomTheme(guildSettings.guildId)
+
+    const nextAnnouncement = new Cron(`0 0 * * ${guildSettings.themeAnnouncementDay}`).nextRun()
+    if (!nextAnnouncement) {
+      throw new Error('Failed to calculate next announcement date')
+    }
+
+    // Set deadline to 11:59 PM on the day of the next announcement
+    const deadlineDate = new Date(nextAnnouncement)
+    deadlineDate.setHours(23, 59, 59, 999)
+
+    const message = await this.sendThemeChannelMessage(
+      guildSettings.guildId,
+      guildSettings.themeAnnouncementChannelId!,
+      jamAnnouncementTemplate({ theme, deadline: deadlineDate }),
+    )
+
+    const jam = await JamModel.create({
+      guildId: guildSettings.guildId,
+      theme,
+      messageId: message.id,
+      messageLink: message.url,
+      deadline: deadlineDate.getTime(),
+    })
+
+    if (guildSettings.googleDriveEnabled) {
+      await this.createThemeSubmissionFolderForJam(guildSettings, jam)
+    }
+
+    return theme
   }
 
   /**
@@ -112,7 +160,7 @@ export abstract class JamService {
     )
   }
 
-  static async getUserStreakInGuild(guildId: string, userId: string): Promise<number> {
+  static async calculateUserStreakInGuild(guildId: string, userId: string): Promise<number> {
     const jams = await JamModel.getAllJamsWithUserSubmissionForGuild({
       guildId: guildId,
       userId: userId,
@@ -130,7 +178,10 @@ export abstract class JamService {
     return streak
   }
 
-  static async getUserAccumulativeScoreInGuild(guildId: string, userId: string): Promise<number> {
+  static async calculateUserAccumulativeScoreInGuild(
+    guildId: string,
+    userId: string,
+  ): Promise<number> {
     const jams = await JamModel.getAllJamsWithUserSubmissionForGuild({
       guildId: guildId,
       userId: userId,
@@ -140,41 +191,56 @@ export abstract class JamService {
     return jamSubmissionCount * JAM_SUBMISSION_SCORE
   }
 
-  private static async generateThemeForGuild(guildSettings: SettingsModel.Model): Promise<string> {
-    if (!guildSettings.themeAnnouncementChannelId) {
-      throw new Error('Theme announcement channel not found')
+  /**
+   * Send a midweek reminder for all scheduled guilds.
+   *
+   * This is called every day. It will find all the guilds with active jams, and
+   * send a reminder for any of them where the deadline for the latest jam is exactly 3 days away.
+   */
+  static async sendMidweekReminderForAllScheduledGuilds(): Promise<void> {
+    // maps announcement day to reminder day
+    const allGuildSettings = await SettingsService.getAll()
+
+    for (const guildSettings of allGuildSettings) {
+      if (!guildSettings.themeAnnouncementChannelId) {
+        continue
+      }
+
+      const jam = await this.getCurrentJamForGuild(guildSettings.guildId)
+
+      // not active jam, so don't send reminder
+      if (!jam) {
+        continue
+      }
+
+      const timeUntilDeadline = jam.deadline - new Date().getTime()
+      const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000
+      const threeDaysInMilliseconds = 3 * 24 * 60 * 60 * 1000
+
+      if (
+        timeUntilDeadline < twoDaysInMilliseconds ||
+        timeUntilDeadline > threeDaysInMilliseconds
+      ) {
+        continue
+      }
+
+      await this.sendThemeChannelMessage(
+        guildSettings.guildId,
+        guildSettings.themeAnnouncementChannelId!,
+        jamMidweekReminderTemplate({ jam }),
+      )
     }
+  }
 
-    const theme = await this.generateRandomTheme(guildSettings.guildId)
-
-    const nextAnnouncement = new Cron(`0 0 * * ${guildSettings.themeAnnouncementDay}`).nextRun()
-    if (!nextAnnouncement) {
-      throw new Error('Failed to calculate next announcement date')
+  /**
+   * Helper function that gets the latest jam for a guild if it is active (not past the deadline).
+   */
+  private static async getCurrentJamForGuild(guildId: string): Promise<JamModel.Jam | null> {
+    const jam = await JamModel.getLatestJamForGuild({ guildId })
+    if (!jam || jam.deadline < new Date().getTime()) {
+      return null
     }
-
-    // Set deadline to 11:59 PM on the day of the next announcement
-    const deadlineDate = new Date(nextAnnouncement)
-    deadlineDate.setHours(23, 59, 59, 999)
-
-    const message = await this.sendThemeChannelMessage(
-      guildSettings.guildId,
-      guildSettings.themeAnnouncementChannelId!,
-      jamAnnouncementTemplate({ theme, deadline: deadlineDate }),
-    )
-
-    const jam = await JamModel.create({
-      guildId: guildSettings.guildId,
-      theme,
-      messageId: message.id,
-      messageLink: message.url,
-      deadline: deadlineDate.getTime(),
-    })
-
-    if (guildSettings.googleDriveEnabled) {
-      await this.createThemeSubmissionFolderForJam(guildSettings, jam)
-    }
-
-    return theme
+    return jam
   }
 
   private static async createThemeSubmissionFolderForJam(

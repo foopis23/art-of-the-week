@@ -181,4 +181,14 @@ export namespace JamModel {
       .set({ themeSubmissionFolderId: themeSubmissionFolderId })
       .where(eq(jamsTable.id, jamId))
   }
+
+  export async function getLatestJamForGuild({ guildId }: { guildId: string }) {
+    return await db
+      .select()
+      .from(jamsTable)
+      .where(eq(jamsTable.guildId, guildId))
+      .orderBy(desc(jamsTable.createdAt))
+      .limit(1)
+      .then((result) => result[0])
+  }
 }

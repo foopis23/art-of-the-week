@@ -1,8 +1,12 @@
 export type Day = 'SUN' | 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT'
 
 export function getCurrentDayOfTheWeek(): Day {
-  const currentDayOfTheWeek = new Date().getDay()
-  switch (currentDayOfTheWeek) {
+  return dateToDay(new Date())
+}
+
+export function dateToDay(date: Date): Day {
+  const day = date.getDay()
+  switch (day) {
     case 0:
       return 'SUN'
     case 1:

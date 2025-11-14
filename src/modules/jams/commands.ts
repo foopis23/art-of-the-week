@@ -18,7 +18,7 @@ export const generateThemeCommand = {
       flags: MessageFlags.Ephemeral,
     })
 
-    const result = await JamService.forceGenerateThemeForGuild(interaction.guild.id)
+    const result = await JamService.forceGenerateJamForGuild(interaction.guild.id)
     if (result instanceof Error) {
       await interaction.editReply({
         content: `Error generating theme: ${result.message}`,
