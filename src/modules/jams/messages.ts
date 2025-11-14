@@ -140,19 +140,21 @@ export const jamSubmissionMessageTemplate: MessageTemplate<{
     mediaGallery.addItems(new MediaGalleryItemBuilder().setURL(attachment.url))
   }
 
-  const title = submission.title ? `#  — ${submission.title} - \n` : ''
+  const title = submission.title ? `#  — ${submission.title} — \n` : ''
   const dateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',
     year: 'numeric',
   })
   const description = submission.description ? `${submission.description}\n\n` : ''
-  const subtitle = `-# <@${submission.userId}>'s submission for [[${dateString}-${jam.theme}](${jam.messageLink})]\n\n`
+  const footer = `-# Submission for [[${dateString} - ${jam.theme}](${jam.messageLink})]\n\n`
 
   return {
     flags: MessageFlags.IsComponentsV2,
     components: [
-      new TextDisplayBuilder().setContent(stripIndents`${title}${subtitle}${description}`),
+      new TextDisplayBuilder().setContent(
+        stripIndents`<@${submission.userId}>\n${title}${description}${footer}`,
+      ),
       mediaGallery,
     ],
   }
