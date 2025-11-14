@@ -43,7 +43,18 @@ program
           log.info(command, 'Executing command')
           await command.execute(interaction as ChatInputCommandInteraction, { client })
         } catch (error) {
-          log.error(error, 'Uncaught error executing command')
+          if (interaction.replied) {
+            await interaction.editReply({
+              content: 'An error occurred while executing the command',
+            })
+          } else {
+            log.error(error, 'Uncaught error executing command')
+
+            await interaction.reply({
+              content: 'An error occurred while executing the command',
+              flags: MessageFlags.Ephemeral,
+            })
+          }
         }
       } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
         try {
@@ -62,6 +73,16 @@ program
           await interactable.execute(interaction as any)
         } catch (error) {
           log.error(error, 'Uncaught error executing interactable')
+          if (interaction.replied) {
+            await interaction.editReply({
+              content: 'An error occurred while executing the interactable',
+            })
+          } else {
+            await interaction.reply({
+              content: 'An error occurred while executing the interactable',
+              flags: MessageFlags.Ephemeral,
+            })
+          }
         }
       } else {
         log.error(interaction, 'Unknown interaction type')
