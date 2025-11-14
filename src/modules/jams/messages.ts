@@ -125,11 +125,6 @@ export const jamAnnouncementTemplate: MessageTemplate<{
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(jamSubmissionButtonInteractable.component())
         .toJSON(),
-      new TextDisplayBuilder()
-        .setContent(
-          `https://drive.google.com/drive/folders/1c2KhgvSKbzuEB9rNHzcNK6L3GHOydXtL`, // TODO: move to guild settings
-        )
-        .toJSON(),
     ],
   }
 }
