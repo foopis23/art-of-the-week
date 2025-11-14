@@ -16,6 +16,7 @@ import type { SettingsModel } from '../settings/model'
 import {
   jamAnnouncementTemplate,
   jamMidweekReminderTemplate,
+  jamRecapMessageTemplate,
   jamSubmissionMessageTemplate,
 } from './messages'
 import { JamModel, JamSubmissionModel, ThemePoolModel } from './model'
@@ -228,6 +229,38 @@ export abstract class JamService {
         guildSettings.guildId,
         guildSettings.themeAnnouncementChannelId!,
         jamMidweekReminderTemplate({ jam }),
+      )
+    }
+  }
+
+  /**
+   * This will run every day (before the announcement time) and send a recap message for all scheduled guilds. A guild is scheduled if today is the deadline of the latest jam.
+   */
+  static async sendJamRecapForAllScheduledGuilds(): Promise<void> {
+    const allGuildSettings = await SettingsService.getAll()
+
+    for (const guildSettings of allGuildSettings) {
+      if (!guildSettings.themeAnnouncementChannelId) {
+        continue
+      }
+
+      const jam = await this.getCurrentJamForGuild(guildSettings.guildId)
+
+      if (!jam) {
+        continue
+      }
+
+      const oneDayInMilliseconds = 24 * 60 * 60 * 1000
+      if (jam.deadline - new Date().getTime() > oneDayInMilliseconds) {
+        continue
+      }
+
+      const submissions = await JamSubmissionModel.getAllSubmissionsForJam({ jamId: jam.id })
+
+      await this.sendThemeChannelMessage(
+        guildSettings.guildId,
+        guildSettings.themeAnnouncementChannelId!,
+        jamRecapMessageTemplate({ jam, submissions }),
       )
     }
   }

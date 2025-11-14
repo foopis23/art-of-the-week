@@ -185,6 +185,69 @@ export const jamMidweekReminderTemplate: MessageTemplate<{
   }
 }
 
+export const jamRecapMessageTemplate: MessageTemplate<{
+  jam: JamModel.Jam
+  submissions: JamSubmissionModel.JamSubmissionWithAttachments[]
+}> = (props) => {
+  const { jam, submissions } = props
+
+  const submissionsSortedByCreatedAt = submissions.sort((a, b) => a.createdAt - b.createdAt)
+
+  const latestSubmission = submissionsSortedByCreatedAt[0]
+  const earliestSubmission = submissionsSortedByCreatedAt[submissionsSortedByCreatedAt.length - 1]
+  const totalSubmissions = submissionsSortedByCreatedAt.length
+
+  if (!latestSubmission || !earliestSubmission) {
+    throw new Error('No submissions found')
+  }
+
+  const latestSubmissionDate = new Date(latestSubmission.createdAt).toLocaleDateString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const latestSubmissionTime = new Date(latestSubmission.createdAt).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  const earliestSubmissionDate = new Date(earliestSubmission.createdAt).toLocaleDateString(
+    'en-US',
+    {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+    },
+  )
+  const earliestSubmissionTime = new Date(earliestSubmission.createdAt).toLocaleTimeString(
+    'en-US',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  )
+
+  const jamDateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  return {
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      new TextDisplayBuilder().setContent(stripIndents`
+        # —End of the Week—
+        -# Submission for Art Jam [[${jamDateString} - ${jam.theme}](${jam.messageLink})] is over
+
+        Contributions: [${totalSubmissions}]
+        First Submission: ${earliestSubmissionDate} ${earliestSubmissionTime}
+        Last Submission: ${latestSubmissionDate} ${latestSubmissionTime}
+      `),
+    ],
+  }
+}
+
 export const jamInteractables: Interactable[] = [
   jamSubmissionModalInteractable,
   jamSubmissionButtonInteractable,

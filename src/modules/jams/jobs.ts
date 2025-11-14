@@ -20,4 +20,13 @@ export const jamJobs: Job[] = [
       await JamService.sendMidweekReminderForAllScheduledGuilds()
     },
   },
+  {
+    schedule: '0 9 * * *',
+    options: {
+      name: 'Jam Recap',
+    },
+    execute: async () => {
+      await JamService.sendJamRecapForAllScheduledGuilds()
+    },
+  },
 ]

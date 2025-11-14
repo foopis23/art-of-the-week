@@ -130,6 +130,15 @@ export namespace JamSubmissionModel {
       .set({ googleDriveFileId: googleDriveFileId })
       .where(eq(jamSubmissionAttachmentsTable.id, submissionAttachmentId))
   }
+
+  export async function getAllSubmissionsForJam({ jamId }: { jamId: string }) {
+    return await db.query.jamSubmissionTable.findMany({
+      with: {
+        attachments: true,
+      },
+      where: eq(jamSubmissionTable.themeId, jamId),
+    })
+  }
 }
 
 export namespace JamModel {
