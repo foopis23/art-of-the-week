@@ -92,10 +92,10 @@ export const jamSubmissionButtonInteractable = {
 
 export const jamAnnouncementTemplate: MessageTemplate<{
   theme: string
+  deadline: Date
 }> = (props) => {
-  const { theme } = props
+  const { theme, deadline } = props
   const date = new Date()
-  const deadline = new Date(date.getTime() + 1000 * 60 * 60 * 24 * 7)
   const dateString = date.toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',

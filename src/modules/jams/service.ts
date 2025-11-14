@@ -3,6 +3,7 @@ import { getCurrentDayOfTheWeek } from '@/lib/date'
 import { log } from '@/log'
 import { DEFAULT_THEME_POOL, JAM_SUBMISSION_SCORE } from '@/modules/jams/const'
 import { SettingsService } from '@/modules/settings/service'
+import { Cron } from 'croner'
 import {
   type Attachment,
   type GuildMember,
@@ -146,10 +147,19 @@ export abstract class JamService {
 
     const theme = await this.generateRandomTheme(guildSettings.guildId)
 
+    const nextAnnouncement = new Cron(`0 0 * * ${guildSettings.themeAnnouncementDay}`).nextRun()
+    if (!nextAnnouncement) {
+      throw new Error('Failed to calculate next announcement date')
+    }
+
+    // Set deadline to 11:59 PM on the day of the next announcement
+    const deadlineDate = new Date(nextAnnouncement)
+    deadlineDate.setHours(23, 59, 59, 999)
+
     const message = await this.sendThemeChannelMessage(
       guildSettings.guildId,
       guildSettings.themeAnnouncementChannelId!,
-      jamAnnouncementTemplate({ theme }),
+      jamAnnouncementTemplate({ theme, deadline: deadlineDate }),
     )
 
     const jam = await JamModel.create({
@@ -157,7 +167,7 @@ export abstract class JamService {
       theme,
       messageId: message.id,
       messageLink: message.url,
-      deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).getTime(),
+      deadline: deadlineDate.getTime(),
     })
 
     if (guildSettings.googleDriveEnabled) {
