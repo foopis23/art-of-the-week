@@ -60,8 +60,8 @@ Each week, we will generate a theme for art creation. Participants will create a
   - [x] Fixed Date Formats
   - [x] Fix Deadline date calculation (use cron schedule to figure out when next announcement is)
 - [x] Add midweek reminder messages
-- [ ] Add jam recap message
-- [ ] Dockerize the bot
-- [ ] Deploy
+- [x] Add jam recap message
+- [x] Dockerize the bot
+- [x] Deploy
 - [ ] Add PostHog Error Tracking and Analytics
 - [ ] Documentation
