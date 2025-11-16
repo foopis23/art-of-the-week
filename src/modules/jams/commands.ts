@@ -30,7 +30,7 @@ export const generateThemeCommand = {
       content: 'Successfully forced theme regeneration',
     })
   },
-  deploy: 'guild',
+  deploy: 'global',
 } satisfies Command
 
 export const themeCommands: Command[] = [generateThemeCommand]

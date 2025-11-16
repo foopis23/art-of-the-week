@@ -61,7 +61,7 @@ export const settingsCommand = {
         return
     }
   },
-  deploy: 'guild' as const,
+  deploy: 'global' as const,
 } satisfies Command
 
 export const settingsCommands: Command[] = [settingsCommand]
