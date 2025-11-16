@@ -73,7 +73,7 @@ export abstract class SettingsService {
     return {
       guildId,
       themeAnnouncementChannelId: null,
-      themeAnnouncementDay: 'SUN',
+      themeAnnouncementDay: 'MON',
       googleDriveFolderURL: null,
       googleDriveEnabled: false,
       streaksMode: 'disabled',
