@@ -26,6 +26,7 @@ RUN chmod +x /app/docker-entrypoint.sh && chown bun:bun /app/docker-entrypoint.s
 
 # Set environment to production
 ENV NODE_ENV=production
+ENV TZ=America/New_York
 
 # Use tini as entrypoint for proper signal handling
 ENTRYPOINT ["/usr/bin/tini", "--", "/app/docker-entrypoint.sh"]
