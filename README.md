@@ -20,8 +20,8 @@ Each week, we will generate a theme for art creation. Participants will create a
 
 ## Google Drive Setup (optional)
 
-###  1. Run `/settings google-drive` and follow the modal instructions to share your Google Drive folder with the bot.
-###2. Paste the share link into the text input and submit. 
+### 1. Run `/settings google-drive` and follow the modal instructions to share your Google Drive folder with the bot.
+### 2. Paste the share link into the text input 
 
 *All future theme announcements will automatically create a submission folder in your Google Drive and save each submission to the folder for archival purposes.*
 
