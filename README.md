@@ -1,4 +1,4 @@
-# Art Jam
+# Art Jam Bot
 
 ## Description
 Each week, we will generate a theme for art creation. Participants will create and submit their artwork based on the weekly theme. This discord bot will announce the theme, create a google drive folder for theme submissions, and upload submission (discord attachments in reply messages) to the folder (for archival purposes).
@@ -10,15 +10,22 @@ Each week, we will generate a theme for art creation. Participants will create a
     - Google Drive Integration for Archival (optional)
 - Per Guild Bot Configuration
 
-## Usage
-1. [Invite the bot](https://discord.com/oauth2/authorize?client_id=1436075080835792998&permissions=2251799813720064&integration_type=0&scope=bot) to your server
-2. Run `/settings general` to configure the theme announcement channel
+## Setup
+### 1. [Invite the bot](https://discord.com/oauth2/authorize?client_id=1436075080835792998&permissions=2251799813720064&integration_type=0&scope=bot) to your server
+### 2. Run `/settings general` to configure the theme announcement channel
 
-Themes are automatically announced at 3pm EST on the configured day (default: Monday). To start a jam immediately, run `/theme` to force generate one with a deadline set to the day before the next scheduled announcement.
+*Themes are automatically announced at 3pm EST on the configured day (default: Monday). To start a jam immediately, run `/theme` to force generate one with a deadline set to the day before the next scheduled announcement.*
 
-### Google Drive Setup (optional)
+![General Settings Panel](./docs/images/general-settings.png)
 
-3. Run `/settings google-drive` and follow the modal instructions to share your Google Drive folder with the bot. Paste the share link into the text input and submit. All future theme announcements will automatically create a submission folder in your Google Drive for archival purposes. 
+## Google Drive Setup (optional)
+
+###  1. Run `/settings google-drive` and follow the modal instructions to share your Google Drive folder with the bot.
+###2. Paste the share link into the text input and submit. 
+
+*All future theme announcements will automatically create a submission folder in your Google Drive and save each submission to the folder for archival purposes.*
+
+![Google Drive Settings Panel](./docs/images/google-drive-settings.png)
 
 ## Development
 ### Vocab
