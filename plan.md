@@ -63,5 +63,5 @@ Each week, we will generate a theme for art creation. Participants will create a
 - [x] Add jam recap message
 - [x] Dockerize the bot
 - [x] Deploy
-- [ ] Add PostHog Error Tracking and Analytics
-- [ ] Documentation
+- ~~[ ] Add PostHog Error Tracking and Analytics~~
+- [x] Documentation
