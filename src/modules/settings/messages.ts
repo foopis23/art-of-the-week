@@ -1,5 +1,4 @@
 import type { StreaksMode } from '@/db/schema'
-import type { Day } from '@/lib/date'
 import type { Interactable } from '@/lib/discord/Interactable'
 import { stripIndent } from 'common-tags'
 import type { ModalSubmitInteraction } from 'discord.js'
@@ -21,39 +20,7 @@ import { SettingsService } from './service'
 export const generalSettingsModalInteractable = {
   customId: 'general_settings',
   component: (props: SettingsModel.GeneralSettings) => {
-    const { themeAnnouncementDay, streaksMode, themeAnnouncementChannelId } = props
-    const sunOption = new StringSelectMenuOptionBuilder().setLabel('Sunday').setValue('SUN')
-    const monOption = new StringSelectMenuOptionBuilder().setLabel('Monday').setValue('MON')
-    const tueOption = new StringSelectMenuOptionBuilder().setLabel('Tuesday').setValue('TUE')
-    const wedOption = new StringSelectMenuOptionBuilder().setLabel('Wednesday').setValue('WED')
-    const thuOption = new StringSelectMenuOptionBuilder().setLabel('Thursday').setValue('THU')
-    const friOption = new StringSelectMenuOptionBuilder().setLabel('Friday').setValue('FRI')
-    const satOption = new StringSelectMenuOptionBuilder().setLabel('Saturday').setValue('SAT')
-    switch (themeAnnouncementDay) {
-      case 'SUN':
-        sunOption.setDefault(true)
-        break
-      case 'MON':
-        monOption.setDefault(true)
-        break
-      case 'TUE':
-        tueOption.setDefault(true)
-        break
-      case 'WED':
-        wedOption.setDefault(true)
-        break
-      case 'THU':
-        thuOption.setDefault(true)
-        break
-      case 'FRI':
-        friOption.setDefault(true)
-        break
-      case 'SAT':
-        satOption.setDefault(true)
-        break
-      default:
-        break
-    }
+    const { streaksMode, themeAnnouncementChannelId } = props
 
     const streakDisabledOption = new StringSelectMenuOptionBuilder()
       .setLabel('Disabled')
@@ -94,25 +61,8 @@ export const generalSettingsModalInteractable = {
       .setTitle('Art Jam - General Settings')
       .addLabelComponents(
         new LabelBuilder()
-          .setLabel('Theme Announcement Day')
-          .setStringSelectMenuComponent(
-            new StringSelectMenuBuilder()
-              .addOptions(
-                sunOption,
-                monOption,
-                tueOption,
-                wedOption,
-                thuOption,
-                friOption,
-                satOption,
-              )
-              .setMaxValues(1)
-              .setMinValues(1)
-              .setPlaceholder('Select an option')
-              .setCustomId('theme_announcement_day'),
-          ),
-      )
-      .addLabelComponents(
+          .setLabel('Theme Announcement Channel')
+          .setChannelSelectMenuComponent(channelSelector),
         new LabelBuilder()
           .setLabel('Streaks Mode')
           .setStringSelectMenuComponent(
@@ -124,17 +74,8 @@ export const generalSettingsModalInteractable = {
               .setCustomId('streaks_mode'),
           ),
       )
-      .addLabelComponents(
-        new LabelBuilder()
-          .setLabel('Theme Announcement Channel')
-          .setChannelSelectMenuComponent(channelSelector),
-      )
   },
   execute: async (interaction: ModalSubmitInteraction) => {
-    await interaction.deferReply({
-      flags: MessageFlags.Ephemeral,
-    })
-
     const guildId = interaction.guildId
     if (!guildId) {
       await interaction.editReply({
@@ -143,37 +84,6 @@ export const generalSettingsModalInteractable = {
       return
     }
 
-    const rawThemeAnnouncementDay =
-      interaction.fields.getStringSelectValues('theme_announcement_day')[0]
-    let themeAnnouncementDay: Day | undefined = undefined
-    switch (rawThemeAnnouncementDay) {
-      case 'SUN':
-        themeAnnouncementDay = 'SUN'
-        break
-      case 'MON':
-        themeAnnouncementDay = 'MON'
-        break
-      case 'TUE':
-        themeAnnouncementDay = 'TUE'
-        break
-      case 'WED':
-        themeAnnouncementDay = 'WED'
-        break
-      case 'THU':
-        themeAnnouncementDay = 'THU'
-        break
-      case 'FRI':
-        themeAnnouncementDay = 'FRI'
-        break
-      case 'SAT':
-        themeAnnouncementDay = 'SAT'
-        break
-      default:
-        if (rawThemeAnnouncementDay !== undefined) {
-          throw new Error(`Invalid theme announcement day: ${rawThemeAnnouncementDay}`)
-        }
-        break
-    }
     const rawStreaksMode = interaction.fields.getStringSelectValues('streaks_mode')[0]
     let streaksMode: StreaksMode | undefined = undefined
     switch (rawStreaksMode) {
@@ -197,13 +107,12 @@ export const generalSettingsModalInteractable = {
 
     await SettingsService.setGeneralSettings({
       guildId: guildId,
-      themeAnnouncementDay,
+      // themeAnnouncementDay,
       streaksMode: streaksMode,
       themeAnnouncementChannelId,
     })
-    await interaction.editReply({
-      content: 'General Settings updated',
-    })
+
+    await interaction.reply({})
   },
 } satisfies Interactable
 

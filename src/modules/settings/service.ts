@@ -1,4 +1,3 @@
-import type { Day } from '@/lib/date'
 import {
   generalSettingsModalInteractable,
   googleDriveConfigurationModalInteractable,
@@ -20,17 +19,12 @@ export abstract class SettingsService {
     return settings[0]
   }
 
-  static async getAllByThemeAnnouncementDay(day: Day): Promise<SettingsModel.Model[]> {
-    return await SettingsModel.getAllByThemeAnnouncementDay({ day })
-  }
-
   static async getGeneralSettings(guildId: string): Promise<SettingsModel.GeneralSettings> {
     const result = await SettingsModel.getGeneralSettings({ guildId })
 
     if (!result) {
       const guildSettings = await this.getGuildSettings(guildId)
       return {
-        themeAnnouncementDay: guildSettings.themeAnnouncementDay,
         streaksMode: guildSettings.streaksMode,
         themeAnnouncementChannelId: guildSettings.themeAnnouncementChannelId,
       }
@@ -73,7 +67,6 @@ export abstract class SettingsService {
     return {
       guildId,
       themeAnnouncementChannelId: null,
-      themeAnnouncementDay: 'MON',
       googleDriveFolderURL: null,
       googleDriveEnabled: false,
       streaksMode: 'disabled',

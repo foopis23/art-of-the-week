@@ -16,11 +16,13 @@ We want it to be that all the guilds with the bot will announce the same theme e
 - Theme suggestions
 
 ## Todo List
-- [ ] Setup dev environment for discord bot
+- [x] Setup dev environment for discord bot
 - [ ] Remove Day of the week setting (it will be easier if all jams start and end on the same day across guilds)
-  - [ ] Remove setting from modal and submit handler
+  - [x] Remove setting from modal and submit handler
   - [ ] Update timed messages to be fixed days
   - [ ] Update deadline calculation to be fixed date
+- [ ] Generate Jam Globally and store in db
+  - [ ] Update /theme command to just display the current theme
 - [ ] Update Theme pool to be global instead of guild based
 - [ ] Update submission conclusion message to include global stats
 - [ ] Add Public Submission Viewer
