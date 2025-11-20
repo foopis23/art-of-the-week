@@ -54,14 +54,11 @@ export abstract class JamService {
 
     const theme = await this.generateRandomTheme(guildSettings.guildId)
 
-    const nextAnnouncement = new Cron(`0 0 * * MON`).nextRun()
-    if (!nextAnnouncement) {
+    const nextDeadline = new Cron(`59 11 * * SUN`).nextRun()
+    if (!nextDeadline) {
       throw new Error('Failed to calculate next announcement date')
     }
-
-    // Set deadline to 11:59 PM on the day of the next announcement
-    const deadlineDate = new Date(nextAnnouncement)
-    deadlineDate.setHours(23, 59, 59, 999)
+    const deadlineDate = new Date(nextDeadline)
 
     const message = await this.sendThemeChannelMessage(
       guildSettings.guildId,
