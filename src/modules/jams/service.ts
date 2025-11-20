@@ -1,5 +1,4 @@
 import { client } from '@/client'
-import { getCurrentDayOfTheWeek } from '@/lib/date'
 import { log } from '@/log'
 import { DEFAULT_THEME_POOL, JAM_SUBMISSION_SCORE } from '@/modules/jams/const'
 import { SettingsService } from '@/modules/settings/service'
@@ -27,8 +26,7 @@ export abstract class JamService {
    * the current day of the week is the same as the theme announcement day.
    */
   static async generateJamForAnyScheduledGuilds(): Promise<void> {
-    const currentDayOfTheWeek = getCurrentDayOfTheWeek()
-    const allGuildSettings = await SettingsService.getAllByThemeAnnouncementDay(currentDayOfTheWeek)
+    const allGuildSettings = await SettingsService.getAll()
 
     for (const guildSettings of allGuildSettings) {
       await this.createJamForGuild(guildSettings)
@@ -56,14 +54,11 @@ export abstract class JamService {
 
     const theme = await this.generateRandomTheme(guildSettings.guildId)
 
-    const nextAnnouncement = new Cron(`0 0 * * ${guildSettings.themeAnnouncementDay}`).nextRun()
-    if (!nextAnnouncement) {
+    const nextDeadline = new Cron(`59 11 * * SUN`).nextRun()
+    if (!nextDeadline) {
       throw new Error('Failed to calculate next announcement date')
     }
-
-    // Set deadline to 11:59 PM on the day of the next announcement
-    const deadlineDate = new Date(nextAnnouncement)
-    deadlineDate.setHours(23, 59, 59, 999)
+    const deadlineDate = new Date(nextDeadline)
 
     const message = await this.sendThemeChannelMessage(
       guildSettings.guildId,

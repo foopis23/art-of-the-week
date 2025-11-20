@@ -1,6 +1,5 @@
 import { relations } from 'drizzle-orm'
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import type { Day } from '../lib/date'
 
 /**
  * Streaks mode for tracking user submissions.
@@ -13,7 +12,6 @@ export type StreaksMode = 'disabled' | 'streaks' | 'accumulative'
 export const settingsTable = sqliteTable('settings', {
   guildId: text('guild_id').primaryKey().notNull(),
   themeAnnouncementChannelId: text('theme_announcement_channel_id'),
-  themeAnnouncementDay: text('theme_announcement_day').$type<Day>().default('MON'),
   googleDriveFolderURL: text('google_drive_folder_url'),
   googleDriveEnabled: integer('google_drive_enabled', { mode: 'boolean' }).default(false).notNull(),
   streaksMode: text('streaks_mode').$type<StreaksMode>().default('disabled').notNull(),

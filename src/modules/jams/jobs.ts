@@ -3,7 +3,7 @@ import { JamService } from '@/modules/jams/service'
 
 export const jamJobs: Job[] = [
   {
-    schedule: '0 15 * * *',
+    schedule: '0 15 * * MON',
     options: {
       name: 'Theme Announcement',
     },
@@ -12,7 +12,7 @@ export const jamJobs: Job[] = [
     },
   },
   {
-    schedule: '0 15 * * *',
+    schedule: '0 15 * * THU',
     options: {
       name: 'Midweek Reminder',
     },
@@ -21,7 +21,7 @@ export const jamJobs: Job[] = [
     },
   },
   {
-    schedule: '0 9 * * *',
+    schedule: '0 9 * * MON',
     options: {
       name: 'Jam Recap',
     },
