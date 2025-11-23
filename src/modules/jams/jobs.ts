@@ -8,7 +8,7 @@ export const jamJobs: Job[] = [
       name: 'Theme Announcement',
     },
     execute: async () => {
-      await JamService.generateJamForAnyScheduledGuilds()
+      await JamService.generateJam()
     },
   },
   {
@@ -26,7 +26,7 @@ export const jamJobs: Job[] = [
       name: 'Jam Recap',
     },
     execute: async () => {
-      await JamService.sendJamRecapForAllScheduledGuilds()
+      await JamService.sendJamRecapMessage()
     },
   },
 ]

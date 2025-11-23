@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 
 /**
  * Streaks mode for tracking user submissions.
@@ -20,18 +20,21 @@ export const settingsTable = sqliteTable('settings', {
     .$default(() => new Date().getTime()),
 })
 
-export const themePoolTable = sqliteTable('theme_pool', {
-  id: text('id')
-    .primaryKey()
-    .$default(() => crypto.randomUUID())
-    .notNull(),
-  guildId: text('guild_id').notNull(),
-  theme: text('theme').notNull(),
-  usedAt: integer('used_at'),
-  createdAt: integer('created_at')
-    .notNull()
-    .$default(() => new Date().getTime()),
-})
+export const themePoolTable = sqliteTable(
+  'theme_pool',
+  {
+    id: text('id')
+      .primaryKey()
+      .$default(() => crypto.randomUUID())
+      .notNull(),
+    theme: text('theme').notNull().unique(),
+    usedAt: integer('used_at'),
+    createdAt: integer('created_at')
+      .notNull()
+      .$default(() => new Date().getTime()),
+  },
+  (table) => [index('theme').on(table.theme)],
+)
 
 export const jamsTable = sqliteTable(
   'jams',
@@ -40,17 +43,39 @@ export const jamsTable = sqliteTable(
       .primaryKey()
       .$default(() => crypto.randomUUID())
       .notNull(),
-    guildId: text('guild_id').notNull(),
     theme: text('theme').notNull(),
-    messageId: text('message_id').notNull(),
-    messageLink: text('message_link').notNull(),
     deadline: integer('deadline').notNull(),
+    createdAt: integer('created_at')
+      .notNull()
+      .$default(() => new Date().getTime()),
+  },
+  (table) => [unique('theme_deadline').on(table.theme, table.deadline)], // unique on theme and deadline
+)
+
+/**
+ * Table for storing jam information specific to a guild. MessageId, links, etc.
+ */
+export const guildJamsTable = sqliteTable(
+  'guild_jams',
+  {
+    id: text('id')
+      .primaryKey()
+      .$default(() => crypto.randomUUID())
+      .notNull(),
+    guildId: text('guild_id').notNull(),
+    jamId: text('jam_id').notNull(),
+    messageId: text('message_id'),
+    messageLink: text('message_link'),
     themeSubmissionFolderId: text('theme_submission_folder_id'),
     createdAt: integer('created_at')
       .notNull()
       .$default(() => new Date().getTime()),
   },
-  (table) => [index('message_id').on(table.messageId)],
+  (table) => [
+    unique('guildid_jamid').on(table.guildId, table.jamId),
+    index('guild_id_jam_id').on(table.guildId, table.jamId),
+    index('message_id').on(table.messageId),
+  ],
 )
 
 export const jamSubmissionTable = sqliteTable(
@@ -60,20 +85,22 @@ export const jamSubmissionTable = sqliteTable(
       .primaryKey()
       .$default(() => crypto.randomUUID())
       .notNull(),
-    guildId: text('guild_id').notNull(),
     userId: text('user_id').notNull(),
     username: text('username').notNull(),
     themeId: text('theme_id').notNull(),
     title: text('title'),
+    shareGuilds: integer('share_guilds', { mode: 'boolean' })
+      .default(true)
+      .notNull() /** Share with all guilds you are in */,
+    shareGlobally: integer('share_globally', { mode: 'boolean' })
+      .default(false)
+      .notNull() /** Share globally with all users */,
     description: text('description'),
     createdAt: integer('created_at')
       .notNull()
       .$default(() => new Date().getTime()),
   },
-  (table) => [
-    index('guild_id_user_id').on(table.guildId, table.userId),
-    index('theme_id').on(table.themeId),
-  ],
+  (table) => [index('theme_id').on(table.themeId)],
 )
 
 export const jamSubmissionAttachmentsTable = sqliteTable('jam_submission_attachments', {
@@ -111,4 +138,11 @@ export const jamSubmissionAttachmentsRelations = relations(
 
 export const jamRelations = relations(jamsTable, ({ many }) => ({
   submissions: many(jamSubmissionTable),
+}))
+
+export const guildJamRelations = relations(guildJamsTable, ({ one }) => ({
+  jam: one(jamsTable, {
+    fields: [guildJamsTable.jamId],
+    references: [jamsTable.id],
+  }),
 }))

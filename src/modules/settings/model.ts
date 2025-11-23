@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { settingsTable } from '@/db/schema'
-import { eq, type InferInsertModel, type InferSelectModel } from 'drizzle-orm'
+import { eq, isNotNull, type InferInsertModel, type InferSelectModel } from 'drizzle-orm'
 
 export namespace SettingsModel {
   export type Model = InferSelectModel<typeof settingsTable>
@@ -13,6 +13,13 @@ export namespace SettingsModel {
 
   export async function getAll() {
     return await db.select().from(settingsTable)
+  }
+
+  export async function listAllWithThemeAnnouncementChannel() {
+    return await db
+      .select()
+      .from(settingsTable)
+      .where(isNotNull(settingsTable.themeAnnouncementChannelId))
   }
 
   export async function create(settings: InsertModel) {

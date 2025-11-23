@@ -4,7 +4,9 @@ import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, SlashCommandBuilder } from 'discord.js'
 
 export const generateThemeCommand = {
-  data: new SlashCommandBuilder().setName('theme').setDescription('Force regenerate a theme'),
+  data: new SlashCommandBuilder()
+    .setName('theme')
+    .setDescription('Resend the current jam announcement'),
   execute: async (interaction: ChatInputCommandInteraction) => {
     if (!interaction.guild?.id) {
       await interaction.reply({
@@ -18,13 +20,7 @@ export const generateThemeCommand = {
       flags: MessageFlags.Ephemeral,
     })
 
-    const result = await JamService.forceGenerateJamForGuild(interaction.guild.id)
-    if (result instanceof Error) {
-      await interaction.editReply({
-        content: `Error generating theme: ${result.message}`,
-      })
-      return
-    }
+    await JamService.resendJamAnnouncement(interaction.guild.id)
 
     await interaction.editReply({
       content: 'Successfully forced theme regeneration',

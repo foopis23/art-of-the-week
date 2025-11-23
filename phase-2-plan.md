@@ -21,9 +21,9 @@ We want it to be that all the guilds with the bot will announce the same theme e
   - [x] Remove setting from modal and submit handler
   - [x] Update timed messages to be fixed days
   - [x] Update deadline calculation to be fixed date
-- [ ] Generate Jam Globally and store in db
-  - [ ] Update Theme pool to be global instead of guild based
-  - [ ] Update /theme command to just display the current theme
+- [x] Generate Jam Globally and store in db
+  - [x] Update Theme pool to be global instead of guild based
+  - [x] Update /theme command to just display the current theme
 - [ ] Implement submission in one guild sharing to all guilds you are in
 - [ ] Update jam conclusion message to include global stats
 - [ ] Add Public Submission Viewer

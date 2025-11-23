@@ -27,8 +27,8 @@ program
     client.on('interactionCreate', async (interaction) => {
       log.debug(interaction, 'interaction created')
 
-      if (interaction.isCommand()) {
-        try {
+      try {
+        if (interaction.isCommand()) {
           const commandName = interaction.commandName
           const command = client.commands.get(commandName)
 
@@ -42,22 +42,7 @@ program
 
           log.info(command, 'Executing command')
           await command.execute(interaction as ChatInputCommandInteraction, { client })
-        } catch (error) {
-          if (interaction.replied) {
-            await interaction.editReply({
-              content: 'An error occurred while executing the command',
-            })
-          } else {
-            log.error(error, 'Uncaught error executing command')
-
-            await interaction.reply({
-              content: 'An error occurred while executing the command',
-              flags: MessageFlags.Ephemeral,
-            })
-          }
-        }
-      } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
-        try {
+        } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
           if (!client.interactables.has(interaction.customId)) {
             log.error(
               { interaction, interactables: client.interactables.entries() },
@@ -71,22 +56,26 @@ program
           const interactable = client.interactables.get(interaction.customId)!
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- i could fix this, but it doesn't seem worth it.
           await interactable.execute(interaction as any)
-        } catch (error) {
-          log.error(error, 'Uncaught error executing interactable')
-          if (interaction.replied) {
+        } else {
+          log.error(interaction, 'Unknown interaction type')
+          return
+        }
+      } catch (error) {
+        log.error(error, 'Uncaught error executing interaction')
+        const errorMessage =
+          'An error occurred while executing the interaction\n```\n' + String(error) + '\n```'
+        if (interaction.isRepliable()) {
+          if (interaction.deferred || interaction.replied) {
             await interaction.editReply({
-              content: 'An error occurred while executing the interactable',
+              content: errorMessage,
             })
           } else {
             await interaction.reply({
-              content: 'An error occurred while executing the interactable',
+              content: errorMessage,
               flags: MessageFlags.Ephemeral,
             })
           }
         }
-      } else {
-        log.error(interaction, 'Unknown interaction type')
-        return
       }
     })
 

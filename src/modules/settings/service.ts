@@ -9,6 +9,10 @@ export abstract class SettingsService {
     return await SettingsModel.getAll()
   }
 
+  static async listAllWithThemeAnnouncementChannel(): Promise<SettingsModel.Model[]> {
+    return await SettingsModel.listAllWithThemeAnnouncementChannel()
+  }
+
   static async getGuildSettings(guildId: string): Promise<SettingsModel.Model> {
     const settings = await SettingsModel.getByGuildId({ guildId })
     if (settings.length === 0 || !settings[0]) {

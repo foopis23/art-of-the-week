@@ -1,5 +1,6 @@
 import { db } from '@/db'
 import {
+  guildJamsTable,
   jamsTable,
   jamSubmissionAttachmentsTable,
   jamSubmissionTable,
@@ -10,6 +11,7 @@ import {
   count,
   desc,
   eq,
+  gt,
   isNull,
   sql,
   type InferInsertModel,
@@ -20,55 +22,39 @@ export namespace ThemePoolModel {
   export type Theme = InferSelectModel<typeof themePoolTable>
   export type InsertTheme = InferInsertModel<typeof themePoolTable>
 
-  export async function getRandomForGuild({ guildId }: { guildId: string }) {
+  export async function getRandomForGuild() {
     return await db
       .select()
       .from(themePoolTable)
-      .where(and(eq(themePoolTable.guildId, guildId), isNull(themePoolTable.usedAt)))
+      .where(isNull(themePoolTable.usedAt))
       .orderBy(sql`RANDOM()`)
       .limit(1)
   }
 
-  export async function getGuildThemeCount({ guildId }: { guildId: string }) {
+  export async function getThemeCount() {
+    return await db.select({ count: count() }).from(themePoolTable)
+  }
+
+  export async function getUnusedThemeCount() {
+    return await db.select({ count: count() }).from(themePoolTable)
+  }
+
+  export async function insertThemes({ themes }: { themes: string[] }) {
     return await db
-      .select({ count: count() })
-      .from(themePoolTable)
-      .where(eq(themePoolTable.guildId, guildId))
+      .insert(themePoolTable)
+      .values(themes.map((theme) => ({ theme })))
+      .onConflictDoNothing()
   }
 
-  export async function getGuildUnusedThemeCount({ guildId }: { guildId: string }) {
-    return await db
-      .select({ count: count() })
-      .from(themePoolTable)
-      .where(and(eq(themePoolTable.guildId, guildId), isNull(themePoolTable.usedAt)))
+  export async function resetThemeUsage() {
+    return await db.update(themePoolTable).set({ usedAt: null })
   }
 
-  export async function insertGuildThemes({
-    guildId,
-    themes,
-  }: {
-    guildId: string
-    themes: string[]
-  }) {
-    return await db.insert(themePoolTable).values(themes.map((theme) => ({ guildId, theme })))
-  }
-
-  export async function deleteGuildThemes({ guildId }: { guildId: string }) {
-    return await db.delete(themePoolTable).where(eq(themePoolTable.guildId, guildId))
-  }
-
-  export async function resetThemeUsageForGuild({ guildId }: { guildId: string }) {
-    return await db
-      .update(themePoolTable)
-      .set({ usedAt: null })
-      .where(eq(themePoolTable.guildId, guildId))
-  }
-
-  export async function setThemeAsUsed({ guildId, theme }: { guildId: string; theme: string }) {
+  export async function setThemeAsUsed({ theme }: { theme: string }) {
     return await db
       .update(themePoolTable)
       .set({ usedAt: new Date().getTime() })
-      .where(and(eq(themePoolTable.guildId, guildId), eq(themePoolTable.theme, theme)))
+      .where(eq(themePoolTable.theme, theme))
   }
 }
 
@@ -145,6 +131,30 @@ export namespace JamModel {
   export type Jam = InferSelectModel<typeof jamsTable>
   export type InsertJam = InferInsertModel<typeof jamsTable>
 
+  export async function getCurrentJam() {
+    return await db.query.jamsTable.findFirst({
+      orderBy: desc(jamsTable.createdAt),
+      where: gt(jamsTable.deadline, new Date().getTime()),
+    })
+  }
+
+  export async function getLatestJam() {
+    return await db.query.jamsTable.findFirst({
+      orderBy: desc(jamsTable.createdAt),
+    })
+  }
+
+  export async function getJamsWithUserSubmissionForUserId({ userId }: { userId: string }) {
+    return await db.query.jamsTable.findMany({
+      with: {
+        submissions: {
+          where: eq(jamSubmissionTable.userId, userId),
+        },
+      },
+      orderBy: desc(jamsTable.createdAt),
+    })
+  }
+
   export async function create(themeAnnouncement: InsertJam) {
     const result = await db.insert(jamsTable).values(themeAnnouncement).returning()
 
@@ -154,50 +164,125 @@ export namespace JamModel {
 
     return result[0]
   }
+}
 
-  export async function getByMessageId({ messageId }: { messageId: string }) {
-    return await db.select().from(jamsTable).where(eq(jamsTable.messageId, messageId)).limit(1)
-  }
+export namespace GuildJamModel {
+  export type GuildJam = InferSelectModel<typeof guildJamsTable>
+  export type InsertGuildJam = InferInsertModel<typeof guildJamsTable>
+  export type UpdateGuildJam = Partial<InsertGuildJam>
 
-  export async function getAllJamsWithUserSubmissionForGuild(args: {
-    guildId: string
-    userId: string
-  }) {
-    const { guildId, userId } = args
-
-    return await db.query.jamsTable.findMany({
+  export async function list() {
+    return await db.query.guildJamsTable.findMany({
       with: {
-        submissions: {
-          columns: {
-            userId: true,
-          },
-        },
+        jam: true,
       },
-      where: and(eq(jamsTable.guildId, guildId), eq(jamSubmissionTable.userId, userId)),
-      orderBy: desc(jamsTable.createdAt),
+      orderBy: desc(guildJamsTable.createdAt),
     })
   }
 
-  export async function updateThemeSubmissionFolderId({
-    jamId,
-    themeSubmissionFolderId,
-  }: {
-    jamId: string
-    themeSubmissionFolderId: string
-  }) {
-    return await db
-      .update(jamsTable)
-      .set({ themeSubmissionFolderId: themeSubmissionFolderId })
-      .where(eq(jamsTable.id, jamId))
+  export async function listByGuildId({ guildId }: { guildId: string }) {
+    return await db.query.guildJamsTable.findMany({
+      where: eq(guildJamsTable.guildId, guildId),
+      with: {
+        jam: true,
+      },
+      orderBy: desc(guildJamsTable.createdAt),
+    })
   }
 
-  export async function getLatestJamForGuild({ guildId }: { guildId: string }) {
+  export async function getByMessageId({ messageId }: { messageId: string }) {
+    return await db.query.guildJamsTable.findFirst({
+      where: eq(guildJamsTable.messageId, messageId),
+      with: {
+        jam: true,
+      },
+      orderBy: desc(guildJamsTable.createdAt),
+    })
+  }
+
+  export async function listByJamId({ jamId }: { jamId: string }) {
     return await db
       .select()
-      .from(jamsTable)
-      .where(eq(jamsTable.guildId, guildId))
-      .orderBy(desc(jamsTable.createdAt))
+      .from(guildJamsTable)
+      .where(eq(guildJamsTable.jamId, jamId))
+      .orderBy(desc(guildJamsTable.createdAt), desc(guildJamsTable.id))
+  }
+
+  export async function getByJamIdAndGuildId({
+    jamId,
+    guildId,
+  }: {
+    jamId: string
+    guildId: string
+  }) {
+    return await db
+      .select()
+      .from(guildJamsTable)
+      .where(and(eq(guildJamsTable.jamId, jamId), eq(guildJamsTable.guildId, guildId)))
       .limit(1)
       .then((result) => result[0])
+  }
+
+  export async function getByJamIdAndGuildIdAndMessageId({
+    jamId,
+    guildId,
+    messageId,
+  }: {
+    jamId: string
+    guildId: string
+    messageId: string
+  }) {
+    return await db
+      .select()
+      .from(guildJamsTable)
+      .where(
+        and(
+          eq(guildJamsTable.jamId, jamId),
+          eq(guildJamsTable.guildId, guildId),
+          eq(guildJamsTable.messageId, messageId),
+        ),
+      )
+      .limit(1)
+  }
+
+  export async function create(guildJam: InsertGuildJam) {
+    const result = await db.insert(guildJamsTable).values(guildJam).returning()
+
+    if (result.length === 0 || !result[0]?.id) {
+      throw new Error('Failed to create guild jam')
+    }
+
+    return result[0]
+  }
+
+  /**
+   * Upsert a guild jam.
+   */
+  export async function set({ data }: { data: InsertGuildJam }) {
+    return await db
+      .insert(guildJamsTable)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [guildJamsTable.guildId, guildJamsTable.jamId],
+        set: data,
+      })
+  }
+
+  export async function setByJamIdAndGuildId({ data }: { data: InsertGuildJam }) {
+    return await db
+      .insert(guildJamsTable)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [guildJamsTable.jamId, guildJamsTable.guildId],
+        set: data,
+      })
+  }
+
+  export async function update({ id, data }: { id: string; data: UpdateGuildJam }) {
+    return await db.update(guildJamsTable).set(data).where(eq(guildJamsTable.id, id))
+  }
+
+  export async function deleteById({ id }: { id: string }) {
+    return await db.delete(guildJamsTable).where(eq(guildJamsTable.id, id))
   }
 }
