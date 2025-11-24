@@ -13,7 +13,12 @@ import { migrate } from './db'
 import { AnalyticsService } from './modules/analytics/service'
 
 if (env.SENTRY_DSN) {
-  Sentry.init({ dsn: env.SENTRY_DSN, environment: env.NODE_ENV })
+  Sentry.init({
+    dsn: env.SENTRY_DSN,
+    environment: env.NODE_ENV,
+    integrations: [Sentry.pinoIntegration()],
+    enabled: env.NODE_ENV === 'production',
+  })
 }
 
 program
