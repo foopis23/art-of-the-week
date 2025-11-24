@@ -1,3 +1,5 @@
+import { env } from '@/env'
+import { log } from '@/log'
 import { posthog } from '@/posthog'
 import type { ChatInputCommandInteraction, MessageComponentInteraction } from 'discord.js'
 import { InteractionType, type Interaction } from 'discord.js'
@@ -34,6 +36,11 @@ export const eventSchema = z.object({
 
 export abstract class AnalyticsService {
   static captureEvent(props: EventProps) {
+    if (env.NODE_ENV !== 'production') {
+      log.debug(props, 'Skipping event capture in non-production environment')
+      return
+    }
+
     const { distinctId, groups, properties } = props
     posthog.capture({
       ...props,
