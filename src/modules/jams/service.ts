@@ -1,4 +1,5 @@
 import { client } from '@/client'
+import { findAllGuildsInCommonWithUser } from '@/lib/discord/util'
 import { log } from '@/log'
 import { DEFAULT_THEME_POOL, JAM_SUBMISSION_SCORE } from '@/modules/jams/const'
 import { SettingsService } from '@/modules/settings/service'
@@ -88,12 +89,8 @@ export abstract class JamService {
       jamId: jam.id,
       guildId: guildSettings.guildId,
     })
-    if (!guildJam) {
-      log.error({ jamId: jam.id, guildId: guildSettings.guildId }, 'Guild jam not found')
-      throw new Error('Guild jam not found')
-    }
 
-    if (guildJam.messageId) {
+    if (guildJam?.messageId) {
       await client.channels
         .fetch(guildSettings.themeAnnouncementChannelId)
         .then((channel) =>
@@ -147,11 +144,13 @@ export abstract class JamService {
       submissions: Attachment[]
       description: string | undefined
       title: string | undefined
+      shareGlobally: boolean
+      shareGuilds: boolean
     },
     message: Message,
     user: GuildMember,
   ) {
-    const { submissions, description, title } = fields
+    const { submissions, description, title, shareGlobally, shareGuilds } = fields
     const guildJam = await GuildJamModel.getByMessageId({ messageId: message.id })
 
     if (!guildJam) {
@@ -170,6 +169,8 @@ export abstract class JamService {
         themeId: jamId,
         description,
         title,
+        shareGlobally,
+        shareGuilds,
       },
       submissions.map((submission) => ({
         url: submission.url,
@@ -178,11 +179,31 @@ export abstract class JamService {
       })),
     )
 
-    await this.sendThemeChannelMessage(
-      message.guildId!,
-      message.channelId!,
-      jamSubmissionMessageTemplate({ jam, submission }),
-    )
+    const guildsToShareWith = shareGuilds
+      ? (await findAllGuildsInCommonWithUser(client, user.id)).map((guild) => guild.id)
+      : [message.guildId!]
+
+    for (const guildId of guildsToShareWith) {
+      const guildSettings = await SettingsService.getGuildSettings(guildId)
+      if (!guildSettings.themeAnnouncementChannelId) {
+        continue
+      }
+
+      const guildJam = await GuildJamModel.getByJamIdAndGuildId({
+        jamId: jamId,
+        guildId: guildId,
+      })
+
+      if (!guildJam) {
+        continue
+      }
+
+      await this.sendThemeChannelMessage(
+        guildId,
+        guildSettings.themeAnnouncementChannelId!,
+        jamSubmissionMessageTemplate({ guildJam, submission }),
+      )
+    }
 
     if (guildSettings.googleDriveEnabled) {
       if (!guildJam.themeSubmissionFolderId) {
@@ -225,7 +246,7 @@ export abstract class JamService {
     for (const jam of jams) {
       const submissions = jam.submissions
       if (submissions.length === 0) {
-        continue
+        break
       }
       streak++
     }
@@ -255,6 +276,11 @@ export abstract class JamService {
    * send a reminder for any of them where the deadline for the latest jam is exactly 3 days away.
    */
   static async sendMidweekReminderForAllScheduledGuilds(): Promise<void> {
+    const jam = await this.getCurrentJam()
+    if (!jam) {
+      throw new Error('No current jam found')
+    }
+
     // maps announcement day to reminder day
     const allGuildSettings = await SettingsService.getAll()
 
@@ -263,22 +289,29 @@ export abstract class JamService {
         continue
       }
 
-      const jam = await this.getCurrentJam()
+      const guildJam = await GuildJamModel.getByJamIdAndGuildId({
+        jamId: jam.id,
+        guildId: guildSettings.guildId,
+      })
 
-      // not active jam, so don't send reminder
-      if (!jam) {
+      if (!guildJam) {
         continue
       }
 
       await this.sendThemeChannelMessage(
         guildSettings.guildId,
         guildSettings.themeAnnouncementChannelId!,
-        jamMidweekReminderTemplate({ jam }),
+        jamMidweekReminderTemplate({ guildJam: guildJam }),
       )
     }
   }
 
   static async sendJamRecapMessage(): Promise<void> {
+    const jam = await this.getLatestJam()
+    if (!jam) {
+      throw new Error('No latest jam found')
+    }
+
     const allGuildSettings = await SettingsService.getAll()
 
     for (const guildSettings of allGuildSettings) {
@@ -286,9 +319,12 @@ export abstract class JamService {
         continue
       }
 
-      const jam = await this.getLatestJam()
+      const guildJam = await GuildJamModel.getByJamIdAndGuildId({
+        jamId: jam.id,
+        guildId: guildSettings.guildId,
+      })
 
-      if (!jam) {
+      if (!guildJam) {
         continue
       }
 
@@ -297,7 +333,7 @@ export abstract class JamService {
       await this.sendThemeChannelMessage(
         guildSettings.guildId,
         guildSettings.themeAnnouncementChannelId!,
-        jamRecapMessageTemplate({ jam, submissions }),
+        jamRecapMessageTemplate({ guildJam: guildJam, submissions }),
       )
     }
   }
@@ -324,6 +360,10 @@ export abstract class JamService {
     return jam
   }
 
+  /**
+   * Create a theme submission folder for a jam.
+   * If the google drive folder URL is not provided, it will send an error message to the theme announcement channel.
+   */
   private static async createThemeSubmissionFolderForJam(args: {
     jamId: string
     guildId: string

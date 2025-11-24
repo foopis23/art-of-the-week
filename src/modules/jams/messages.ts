@@ -12,11 +12,13 @@ import {
   MediaGalleryItemBuilder,
   MessageFlags,
   ModalBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from 'discord.js'
-import type { JamModel, JamSubmissionModel } from './model'
+import type { GuildJamModel, JamSubmissionModel } from './model'
 import { JamService } from './service'
 
 export const jamSubmissionModalInteractable = {
@@ -49,17 +51,49 @@ export const jamSubmissionModalInteractable = {
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(false),
           ),
+        new LabelBuilder()
+          .setLabel('Share Globally')
+          .setDescription('Share your submission globally with all users of the bot')
+          .setStringSelectMenuComponent(
+            new StringSelectMenuBuilder()
+              .addOptions([
+                new StringSelectMenuOptionBuilder().setLabel('true').setValue('true'),
+                new StringSelectMenuOptionBuilder()
+                  .setLabel('false')
+                  .setValue('false')
+                  .setDefault(true),
+              ])
+              .setMaxValues(1)
+              .setMinValues(1)
+              .setPlaceholder('Select an option')
+              .setCustomId('share_globally'),
+          ),
+        new LabelBuilder()
+          .setLabel('Share with Guilds')
+          .setDescription(
+            'Share your submission with other guilds you are in (if they have the bot installed)',
+          )
+          .setStringSelectMenuComponent(
+            new StringSelectMenuBuilder()
+              .addOptions([
+                new StringSelectMenuOptionBuilder()
+                  .setLabel('true')
+                  .setValue('true')
+                  .setDefault(true),
+                new StringSelectMenuOptionBuilder().setLabel('false').setValue('false'),
+              ])
+              .setMaxValues(1)
+              .setMinValues(1)
+              .setPlaceholder('Select an option')
+              .setCustomId('share_guilds'),
+          ),
       ),
   execute: async (interaction: ModalSubmitInteraction) => {
-    await interaction.deferReply({
-      flags: MessageFlags.Ephemeral,
-    })
-
     if (!interaction.message) {
-      return
+      throw new Error('Message not found')
     }
     if (!interaction.member) {
-      return
+      throw new Error('Member not found')
     }
 
     await JamService.handleThemeSubmission(
@@ -67,13 +101,16 @@ export const jamSubmissionModalInteractable = {
         submissions: interaction.fields.getUploadedFiles('submissions')?.values().toArray() ?? [],
         description: interaction.fields.getTextInputValue('description'),
         title: interaction.fields.getTextInputValue('title') ?? undefined,
+        shareGlobally: interaction.fields.getStringSelectValues('share_globally')[0] === 'true',
+        shareGuilds: interaction.fields.getStringSelectValues('share_guilds')[0] === 'true',
       },
       interaction.message,
       interaction.member as GuildMember, // this should always be a GuildMember as far as I can tell
     )
 
-    await interaction.editReply({
-      content: 'Submission received',
+    await interaction.reply({
+      content: 'Submitted successfully',
+      flags: MessageFlags.Ephemeral,
     })
   },
 } satisfies Interactable
@@ -130,10 +167,10 @@ export const jamAnnouncementTemplate: MessageTemplate<{
 }
 
 export const jamSubmissionMessageTemplate: MessageTemplate<{
-  jam: JamModel.Jam
+  guildJam: GuildJamModel.GuildJam
   submission: JamSubmissionModel.JamSubmissionWithAttachments
 }> = (props) => {
-  const { jam, submission } = props
+  const { guildJam, submission } = props
 
   const mediaGallery = new MediaGalleryBuilder()
   for (const attachment of submission.attachments) {
@@ -141,13 +178,13 @@ export const jamSubmissionMessageTemplate: MessageTemplate<{
   }
 
   const title = submission.title ? `#  — ${submission.title} — \n` : ''
-  const dateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
+  const dateString = new Date(guildJam.createdAt).toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',
     year: 'numeric',
   })
   const description = submission.description ? `${submission.description}\n\n` : ''
-  const footer = `-# Submission for [[${dateString} - ${jam.theme}](${jam.messageLink})]\n\n`
+  const footer = `-# Submission for [[${dateString} - ${guildJam.jam.theme}](${guildJam.messageLink})]\n\n`
 
   return {
     flags: MessageFlags.IsComponentsV2,
@@ -161,11 +198,11 @@ export const jamSubmissionMessageTemplate: MessageTemplate<{
 }
 
 export const jamMidweekReminderTemplate: MessageTemplate<{
-  jam: JamModel.Jam
+  guildJam: GuildJamModel.GuildJam
 }> = (props) => {
-  const { jam } = props
+  const { guildJam } = props
 
-  const deadline = new Date(jam.deadline)
+  const deadline = new Date(guildJam.jam.deadline)
   const deadlineString = deadline.toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',
@@ -177,7 +214,7 @@ export const jamMidweekReminderTemplate: MessageTemplate<{
     components: [
       new TextDisplayBuilder().setContent(stripIndents`
         # —Reminder—
-        For Art Jam [[${jam.theme}](${jam.messageLink})]
+        For Art Jam [[${guildJam.jam.theme}](${guildJam.messageLink})]
 
         Submission deadline is ${deadlineString}, 11:59pm.
       `),
@@ -186,10 +223,10 @@ export const jamMidweekReminderTemplate: MessageTemplate<{
 }
 
 export const jamRecapMessageTemplate: MessageTemplate<{
-  jam: JamModel.Jam
+  guildJam: GuildJamModel.GuildJam
   submissions: JamSubmissionModel.JamSubmissionWithAttachments[]
 }> = (props) => {
-  const { jam, submissions } = props
+  const { guildJam, submissions } = props
 
   const submissionsSortedByCreatedAt = submissions.sort((a, b) => a.createdAt - b.createdAt)
 
@@ -227,7 +264,7 @@ export const jamRecapMessageTemplate: MessageTemplate<{
     },
   )
 
-  const jamDateString = new Date(jam.createdAt).toLocaleDateString('en-US', {
+  const jamDateString = new Date(guildJam.createdAt).toLocaleDateString('en-US', {
     month: 'numeric',
     day: 'numeric',
     year: 'numeric',
@@ -238,7 +275,7 @@ export const jamRecapMessageTemplate: MessageTemplate<{
     components: [
       new TextDisplayBuilder().setContent(stripIndents`
         # —End of the Week—
-        -# Submission for Art Jam [[${jamDateString} - ${jam.theme}](${jam.messageLink})] is over
+        -# Submission for Art Jam [[${jamDateString} - ${guildJam.jam.theme}](${guildJam.messageLink})] is over
 
         Contributions: [${totalSubmissions}]
         First Submission: ${earliestSubmissionDate} ${earliestSubmissionTime}

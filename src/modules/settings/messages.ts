@@ -112,7 +112,10 @@ export const generalSettingsModalInteractable = {
       themeAnnouncementChannelId,
     })
 
-    await interaction.reply({})
+    await interaction.reply({
+      content: 'Settings updated successfully',
+      flags: MessageFlags.Ephemeral,
+    })
   },
 } satisfies Interactable
 

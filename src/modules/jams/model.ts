@@ -167,7 +167,9 @@ export namespace JamModel {
 }
 
 export namespace GuildJamModel {
-  export type GuildJam = InferSelectModel<typeof guildJamsTable>
+  export type GuildJam = InferSelectModel<typeof guildJamsTable> & {
+    jam: JamModel.Jam
+  }
   export type InsertGuildJam = InferInsertModel<typeof guildJamsTable>
   export type UpdateGuildJam = Partial<InsertGuildJam>
 
@@ -201,11 +203,19 @@ export namespace GuildJamModel {
   }
 
   export async function listByJamId({ jamId }: { jamId: string }) {
-    return await db
-      .select()
-      .from(guildJamsTable)
-      .where(eq(guildJamsTable.jamId, jamId))
-      .orderBy(desc(guildJamsTable.createdAt), desc(guildJamsTable.id))
+    // return await db
+    //   .select()
+    //   .from(guildJamsTable)
+    //   .where(eq(guildJamsTable.jamId, jamId))
+    //   .orderBy(desc(guildJamsTable.createdAt), desc(guildJamsTable.id))
+
+    return await db.query.guildJamsTable.findMany({
+      where: eq(guildJamsTable.jamId, jamId),
+      with: {
+        jam: true,
+      },
+      orderBy: desc(guildJamsTable.createdAt),
+    })
   }
 
   export async function getByJamIdAndGuildId({
@@ -215,12 +225,13 @@ export namespace GuildJamModel {
     jamId: string
     guildId: string
   }) {
-    return await db
-      .select()
-      .from(guildJamsTable)
-      .where(and(eq(guildJamsTable.jamId, jamId), eq(guildJamsTable.guildId, guildId)))
-      .limit(1)
-      .then((result) => result[0])
+    return await db.query.guildJamsTable.findFirst({
+      where: and(eq(guildJamsTable.jamId, jamId), eq(guildJamsTable.guildId, guildId)),
+      with: {
+        jam: true,
+      },
+      orderBy: desc(guildJamsTable.createdAt),
+    })
   }
 
   export async function getByJamIdAndGuildIdAndMessageId({
@@ -232,17 +243,17 @@ export namespace GuildJamModel {
     guildId: string
     messageId: string
   }) {
-    return await db
-      .select()
-      .from(guildJamsTable)
-      .where(
-        and(
-          eq(guildJamsTable.jamId, jamId),
-          eq(guildJamsTable.guildId, guildId),
-          eq(guildJamsTable.messageId, messageId),
-        ),
-      )
-      .limit(1)
+    return await db.query.guildJamsTable.findFirst({
+      where: and(
+        eq(guildJamsTable.jamId, jamId),
+        eq(guildJamsTable.guildId, guildId),
+        eq(guildJamsTable.messageId, messageId),
+      ),
+      with: {
+        jam: true,
+      },
+      orderBy: desc(guildJamsTable.createdAt),
+    })
   }
 
   export async function create(guildJam: InsertGuildJam) {
