@@ -11,6 +11,7 @@ import {
   type MessageCreateOptions,
   type MessagePayload,
 } from 'discord.js'
+import { AnalyticsService } from '../analytics/service'
 import { GoogleDriveService } from '../google-drive/service'
 import type { SettingsModel } from '../settings/model'
 import {
@@ -180,6 +181,18 @@ export abstract class JamService {
     const guildsToShareWith = shareGuilds
       ? (await findAllGuildsInCommonWithUser(client, user.id)).map((guild) => guild.id)
       : [message.guildId!]
+
+    AnalyticsService.captureEvent({
+      event: 'theme_submission',
+      properties: {
+        guildsToShareWithCount: guildsToShareWith.length,
+        attachmentsCount: submissions.length,
+        hasTitle: !!title,
+        hasDescription: !!description,
+        shareGlobally: shareGlobally,
+        shareGuilds: shareGuilds,
+      },
+    })
 
     for (const guildId of guildsToShareWith) {
       const guildSettings = await SettingsService.getGuildSettings(guildId)
