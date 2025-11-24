@@ -25,7 +25,7 @@ We want it to be that all the guilds with the bot will announce the same theme e
   - [x] Update Theme pool to be global instead of guild based
   - [x] Update /theme command to just display the current theme
 - [x] Implement submission in one guild sharing to all guilds you are in
-- [ ] Update jam conclusion message to include global stats
+- ~~[ ] Update jam conclusion message to include global stats~~
 - [ ] Add Public Submission Viewer
   - [ ] Command to see public submission
   - [ ] Message Template

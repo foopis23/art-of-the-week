@@ -3,11 +3,14 @@ import { commands } from '@/commands'
 import { env } from '@/env'
 import { jobs } from '@/jobs'
 import { log } from '@/log'
+import * as Sentry from '@sentry/node'
 import { program } from 'commander'
 import { Cron } from 'croner'
 import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
+
+Sentry.init({ dsn: env.SENTRY_DSN })
 
 program
   .name('art-of-the-week')
@@ -62,6 +65,7 @@ program
         }
       } catch (error) {
         log.error(error, 'Uncaught error executing interaction')
+        Sentry.captureException(error)
         const errorMessage =
           'An error occurred while executing the interaction\n```\n' + String(error) + '\n```'
         if (interaction.isRepliable()) {
