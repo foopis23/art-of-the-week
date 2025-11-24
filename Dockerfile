@@ -16,6 +16,7 @@ RUN bun install --frozen-lockfile
 # Copy application code
 COPY tsconfig.json drizzle.config.ts ./
 COPY src ./src
+COPY drizzle ./drizzle
 
 # Create data directory for SQLite database (with proper permissions)
 RUN mkdir -p /app/data && chown -R bun:bun /app/data
