@@ -9,6 +9,7 @@ import { Cron } from 'croner'
 import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
+import { migrate } from './db'
 
 Sentry.init({ dsn: env.SENTRY_DSN, environment: env.NODE_ENV })
 
@@ -150,4 +151,13 @@ program
     }
   })
 
-program.parse(process.argv)
+async function main() {
+  await migrate()
+  program.parse(process.argv)
+}
+
+main().catch((error) => {
+  log.error(error, 'Error starting bot')
+  Sentry.captureException(error)
+  process.exit(1)
+})
