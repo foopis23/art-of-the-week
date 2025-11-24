@@ -2,6 +2,7 @@ import { db } from '@/db'
 import {
   guildJamsTable,
   jamsTable,
+  jamSubmissionAttachmentGuildFilesTable,
   jamSubmissionAttachmentsTable,
   jamSubmissionTable,
   themePoolTable,
@@ -104,6 +105,9 @@ export namespace JamSubmissionModel {
     })
   }
 
+  /**
+   * @deprecated Use createGuildFileId instead. This is kept for backward compatibility.
+   */
   export async function updateAttachmentsGoogleDriveFileId({
     submissionAttachmentId,
     googleDriveFileId,
@@ -115,6 +119,35 @@ export namespace JamSubmissionModel {
       .update(jamSubmissionAttachmentsTable)
       .set({ googleDriveFileId: googleDriveFileId })
       .where(eq(jamSubmissionAttachmentsTable.id, submissionAttachmentId))
+  }
+
+  /**
+   * Create a guild-specific Google Drive file ID for a submission attachment.
+   * This allows the same attachment to be uploaded to multiple guild folders.
+   */
+  export async function createGuildFileId({
+    submissionAttachmentId,
+    guildId,
+    googleDriveFileId,
+  }: {
+    submissionAttachmentId: string
+    guildId: string
+    googleDriveFileId: string
+  }) {
+    return await db
+      .insert(jamSubmissionAttachmentGuildFilesTable)
+      .values({
+        submissionAttachmentId,
+        guildId,
+        googleDriveFileId,
+      })
+      .onConflictDoUpdate({
+        target: [
+          jamSubmissionAttachmentGuildFilesTable.submissionAttachmentId,
+          jamSubmissionAttachmentGuildFilesTable.guildId,
+        ],
+        set: { googleDriveFileId },
+      })
   }
 
   export async function getAllSubmissionsForJam({ jamId }: { jamId: string }) {
