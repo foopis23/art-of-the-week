@@ -20,6 +20,6 @@ export const env = z
     GOOGLE_CLIENT_CREDENTIALS: z
       .string('GOOGLE_CLIENT_CREDENTIALS is required')
       .min(1, 'GOOGLE_CLIENT_CREDENTIALS is required'),
-    SENTRY_DSN: z.string('SENTRY_DSN is required').min(1, 'SENTRY_DSN is required'),
+    SENTRY_DSN: z.string().optional(),
   })
   .parse(process.env)
