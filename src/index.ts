@@ -10,12 +10,7 @@ import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
 import { migrate } from './db'
-import { posthog } from './posthog'
-
-posthog.capture({
-  distinctId: 'test-id',
-  event: 'test-event',
-})
+import { AnalyticsService } from './modules/analytics/service'
 
 if (env.SENTRY_DSN) {
   Sentry.init({ dsn: env.SENTRY_DSN, environment: env.NODE_ENV })
@@ -39,6 +34,11 @@ program
     client.on('interactionCreate', async (interaction) => {
       log.debug(interaction, 'interaction created')
 
+      AnalyticsService.captureEventFromInteraction({
+        event: 'interaction_created',
+        interaction,
+      })
+
       try {
         if (interaction.isCommand()) {
           const commandName = interaction.commandName
@@ -46,6 +46,12 @@ program
 
           if (!command) {
             log.error(interaction, 'Command not found')
+
+            AnalyticsService.captureEventFromInteraction({
+              event: 'command_not_found',
+              interaction,
+            })
+
             return interaction.reply({
               content: 'Command not found',
               flags: MessageFlags.Ephemeral,
@@ -53,13 +59,25 @@ program
           }
 
           log.info(command, 'Executing command')
+
           await command.execute(interaction as ChatInputCommandInteraction, { client })
+
+          AnalyticsService.captureEventFromInteraction({
+            event: 'command_executed',
+            interaction,
+          })
         } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
           if (!client.interactables.has(interaction.customId)) {
             log.error(
               { interaction, interactables: client.interactables.entries() },
               'Interactable not found',
             )
+
+            AnalyticsService.captureEventFromInteraction({
+              event: 'interactable_not_found',
+              interaction,
+            })
+
             return interaction.reply({
               content: 'Interactable not found',
               flags: MessageFlags.Ephemeral,
@@ -70,6 +88,12 @@ program
           await interactable.execute(interaction as any)
         } else {
           log.error(interaction, 'Unknown interaction type')
+
+          AnalyticsService.captureEventFromInteraction({
+            event: 'unhandled_interaction',
+            interaction,
+          })
+
           return
         }
       } catch (error) {
@@ -89,6 +113,14 @@ program
             })
           }
         }
+
+        AnalyticsService.captureEventFromInteraction({
+          event: 'unhandled_interaction_error',
+          interaction,
+          properties: {
+            error: String(error),
+          },
+        })
       }
     })
 
