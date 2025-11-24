@@ -5,16 +5,19 @@ Each week, we will generate a theme for art creation. Participants will create a
 
 ## Features
 - Weekly Generated Themes
-  - User Submissions
-    - Streak Tracking (optional)
-    - Google Drive Integration for Archival (optional)
-- Per Guild Bot Configuration
+- User Submissions
+- Cross-Guild submissions means that you can submit your art work once and share with all the guilds you are apart of (that also have this bot)
+- Google Drive Integration (allow your guild to setup a google drive folder to archive all submissions)
+
+## Planned Features
+- Streaks: If this feature is enabled users will be able to see the current streak on each submission or by running a command. The two modes will be continuous streak or accumulative (each submissions gives a set amount of points that just get added to the users total).
+- Global Submissions: Users will be able to opt in to sharing there submissions globally. This will share their submissions almost like a socially media posts. Any users of the bot will be able to browser all the global submissions for any particular week.
+
 
 ## Setup
 ### 1. [Invite the bot](https://discord.com/oauth2/authorize?client_id=1436075080835792998&permissions=2251799813720064&integration_type=0&scope=bot) to your server
 ### 2. Run `/settings general` to configure the theme announcement channel
-
-*Themes are automatically announced at 3pm EST on the configured day (default: Monday). To start a jam immediately, run `/theme` to force generate one with a deadline set to the day before the next scheduled announcement.*
+### 3. If you want to display the current theme in the middle of the week, run `/theme` command in the theme announcement channel to create a new announcement message.
 
 ![General Settings Panel](./docs/images/general-settings.png)
 
@@ -37,24 +40,17 @@ Each week, we will generate a theme for art creation. Participants will create a
 - Multi submission strategy
   - Allow Multi Submission? Maybe do something to separate them in google drive?
   - Maybe have a setting to control if its allow and different strategies for handling it? Replace, Keep Both, etc
-- Setting for Allow Late Submissions
-  - If disabled, submission button will be edited out of the message from all old themes when new themes is announced
-  - probably also need a submission guard on the submission handler just to be sure
 - Setting for Storage Format
   - flat (so its easier to look through the pictures)
   - folder per submission (so its more organized)
 - More Storage Integrations
   - S3 Compatible Bucket
   - SFTP
-- Custom Message Templates
-  - the ability to make custom handler bar templates for messages directly in discord
-  - the ability to enable or disable certain message types
-    - reminder
-    - recap
-- Theme Reroll
-  - Right now, there is a command to force generate a theme. But it would be nice if you could just reroll a previous theme and it would edit the original message and all that
-  - Setting to enable emoji voting for reroll
-- Theme Import Command
-  - allow importing a list of themes from comma separated list or cvs file
-- Theme Editor Web Application
-  - allow a user to run a command that will send them a link to manager their discord's theme pool
+- Suggest themes commands
+- Global Submission Web App
+  - See all submissions by theme
+  - See all submissions by a specific user
+  - Allow users to show their discord username with submissions
+    - Allow users to hide real username, but set a nickname
+- Edit Existing Submission
+- Report Submissions
