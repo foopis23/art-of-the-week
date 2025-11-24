@@ -17,7 +17,7 @@ if (env.SENTRY_DSN) {
     dsn: env.SENTRY_DSN,
     environment: env.NODE_ENV,
     integrations: [Sentry.pinoIntegration()],
-    enabled: env.NODE_ENV === 'production',
+    enableLogs: env.NODE_ENV === 'production',
   })
 }
 
