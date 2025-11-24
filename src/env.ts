@@ -21,5 +21,10 @@ export const env = z
       .string('GOOGLE_CLIENT_CREDENTIALS is required')
       .min(1, 'GOOGLE_CLIENT_CREDENTIALS is required'),
     SENTRY_DSN: z.string().optional(),
+    POSTHOG_API_KEY: z.string('POSTHOG_API_KEY is required').min(1, 'POSTHOG_API_KEY is required'),
+    POSTHOG_HOST: z
+      .string('POSTHOG_HOST is required')
+      .min(1, 'POSTHOG_HOST is required')
+      .default('https://us.i.posthog.com'),
   })
   .parse(process.env)
