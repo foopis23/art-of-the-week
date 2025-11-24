@@ -10,6 +10,12 @@ import type { ChatInputCommandInteraction } from 'discord.js'
 import { MessageFlags, REST, Routes } from 'discord.js'
 import pkg from '../package.json'
 import { migrate } from './db'
+import { posthog } from './posthog'
+
+posthog.capture({
+  distinctId: 'test-id',
+  event: 'test-event',
+})
 
 if (env.SENTRY_DSN) {
   Sentry.init({ dsn: env.SENTRY_DSN, environment: env.NODE_ENV })
