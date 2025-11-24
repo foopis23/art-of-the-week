@@ -96,6 +96,11 @@ export const jamSubmissionModalInteractable = {
       throw new Error('Member not found')
     }
 
+    // Defer reply first to prevent interaction timeout (Discord requires response within 3 seconds)
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral,
+    })
+
     await JamService.handleThemeSubmission(
       {
         submissions: interaction.fields.getUploadedFiles('submissions')?.values().toArray() ?? [],
@@ -108,9 +113,8 @@ export const jamSubmissionModalInteractable = {
       interaction.member as GuildMember, // this should always be a GuildMember as far as I can tell
     )
 
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Submitted successfully',
-      flags: MessageFlags.Ephemeral,
     })
   },
 } satisfies Interactable

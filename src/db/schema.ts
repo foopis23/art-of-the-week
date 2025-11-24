@@ -112,11 +112,37 @@ export const jamSubmissionAttachmentsTable = sqliteTable('jam_submission_attachm
   name: text('name').notNull(),
   url: text('file_url').notNull(),
   contentType: text('content_type').notNull(),
-  googleDriveFileId: text('google_drive_file_id'),
+  googleDriveFileId: text('google_drive_file_id'), // Deprecated: kept for backward compatibility
   createdAt: integer('created_at')
     .notNull()
     .$default(() => new Date().getTime()),
 })
+
+/**
+ * Table for tracking guild-specific Google Drive file IDs for submission attachments.
+ * Each attachment can be uploaded to multiple guild folders, so we need to track
+ * which file ID corresponds to which guild.
+ */
+export const jamSubmissionAttachmentGuildFilesTable = sqliteTable(
+  'jam_submission_attachment_guild_files',
+  {
+    id: text('id')
+      .primaryKey()
+      .$default(() => crypto.randomUUID())
+      .notNull(),
+    submissionAttachmentId: text('submission_attachment_id').notNull(),
+    guildId: text('guild_id').notNull(),
+    googleDriveFileId: text('google_drive_file_id').notNull(),
+    createdAt: integer('created_at')
+      .notNull()
+      .$default(() => new Date().getTime()),
+  },
+  (table) => [
+    unique('attachment_guild').on(table.submissionAttachmentId, table.guildId),
+    index('submission_attachment_id').on(table.submissionAttachmentId),
+    index('guild_id').on(table.guildId),
+  ],
+)
 
 export const jamSubmissionRelations = relations(jamSubmissionTable, ({ many, one }) => ({
   attachments: many(jamSubmissionAttachmentsTable),
@@ -128,10 +154,21 @@ export const jamSubmissionRelations = relations(jamSubmissionTable, ({ many, one
 
 export const jamSubmissionAttachmentsRelations = relations(
   jamSubmissionAttachmentsTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     submission: one(jamSubmissionTable, {
       fields: [jamSubmissionAttachmentsTable.submissionId],
       references: [jamSubmissionTable.id],
+    }),
+    guildFiles: many(jamSubmissionAttachmentGuildFilesTable),
+  }),
+)
+
+export const jamSubmissionAttachmentGuildFilesRelations = relations(
+  jamSubmissionAttachmentGuildFilesTable,
+  ({ one }) => ({
+    attachment: one(jamSubmissionAttachmentsTable, {
+      fields: [jamSubmissionAttachmentGuildFilesTable.submissionAttachmentId],
+      references: [jamSubmissionAttachmentsTable.id],
     }),
   }),
 )

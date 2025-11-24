@@ -160,8 +160,6 @@ export abstract class JamService {
     const jam = guildJam.jam
     const jamId = jam.id
 
-    const guildSettings = await SettingsService.getGuildSettings(message.guildId!)
-
     const submission = await JamSubmissionModel.create(
       {
         userId: user.id,
@@ -203,37 +201,39 @@ export abstract class JamService {
         guildSettings.themeAnnouncementChannelId!,
         jamSubmissionMessageTemplate({ guildJam, submission }),
       )
-    }
 
-    if (guildSettings.googleDriveEnabled) {
-      if (!guildJam.themeSubmissionFolderId) {
-        const themeSubmissionFolderId = await this.createThemeSubmissionFolderForJam({
-          ...guildSettings,
-          jamId: jamId,
-          theme: jam.theme,
-          jamDate: jam.createdAt,
-        })
-        if (!themeSubmissionFolderId) {
-          throw new Error('Failed to create theme submission folder')
-        }
-        guildJam.themeSubmissionFolderId = themeSubmissionFolderId
-      }
-
-      const themeSubmissionFolderId = guildJam.themeSubmissionFolderId
-
-      await Promise.all(
-        submission.attachments.map(async (attachment) => {
-          const id = await GoogleDriveService.uploadAttachmentToGoogleDriveFolder(
-            attachment,
-            user.nickname ?? user.user.username,
-            themeSubmissionFolderId,
-          )
-          await JamSubmissionModel.updateAttachmentsGoogleDriveFileId({
-            submissionAttachmentId: attachment.id,
-            googleDriveFileId: id,
+      // Upload to Google Drive for each guild that has it enabled
+      if (guildSettings.googleDriveEnabled) {
+        if (!guildJam.themeSubmissionFolderId) {
+          const themeSubmissionFolderId = await this.createThemeSubmissionFolderForJam({
+            ...guildSettings,
+            jamId: jamId,
+            theme: jam.theme,
+            jamDate: jam.createdAt,
           })
-        }),
-      )
+          if (!themeSubmissionFolderId) {
+            throw new Error('Failed to create theme submission folder')
+          }
+          guildJam.themeSubmissionFolderId = themeSubmissionFolderId
+        }
+
+        const themeSubmissionFolderId = guildJam.themeSubmissionFolderId
+
+        await Promise.all(
+          submission.attachments.map(async (attachment) => {
+            const id = await GoogleDriveService.uploadAttachmentToGoogleDriveFolder(
+              attachment,
+              user.nickname ?? user.user.username,
+              themeSubmissionFolderId,
+            )
+            await JamSubmissionModel.createGuildFileId({
+              submissionAttachmentId: attachment.id,
+              guildId: guildId,
+              googleDriveFileId: id,
+            })
+          }),
+        )
+      }
     }
   }
 
