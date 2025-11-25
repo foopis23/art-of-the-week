@@ -5,7 +5,6 @@ Each week, we will generate a theme for art creation. Participants will create a
 
 ## Features
 - Weekly Generated Themes
-- User Submissions
 - Cross-Guild submissions means that you can submit your art work once and share with all the guilds you are apart of (that also have this bot)
 - Google Drive Integration (allow your guild to setup a google drive folder to archive all submissions)
 
