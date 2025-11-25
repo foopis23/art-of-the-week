@@ -1,4 +1,4 @@
-import { drive } from '@/google'
+import { drive } from '@/modules/google-drive/google'
 import { Readable } from 'node:stream'
 
 export abstract class GoogleDriveService {

@@ -1,6 +1,6 @@
-import { client } from '@/client'
 import { findAllGuildsInCommonWithUser } from '@/lib/discord/util'
 import { log } from '@/log'
+import { client } from '@/modules/bot/client'
 import { DEFAULT_THEME_POOL, JAM_SUBMISSION_SCORE } from '@/modules/jams/const'
 import { SettingsService } from '@/modules/settings/service'
 import { Cron } from 'croner'
@@ -26,7 +26,7 @@ export abstract class JamService {
   /**
    * Generate a jam and notify all guilds where theme announcement channel exists.
    */
-  static async generateJam(): Promise<void> {
+  static async generateJam() {
     const theme = await this.generateRandomTheme()
 
     const nextDeadline = new Cron(`59 11 * * SUN`).nextRun()
@@ -40,33 +40,40 @@ export abstract class JamService {
       deadline: deadlineDate.getTime(),
     })
 
-    const allGuildSettings = await SettingsService.listAllWithThemeAnnouncementChannel()
+    return jam
+  }
 
-    for (const guildSettings of allGuildSettings) {
-      const themeAnnouncementChannelId = guildSettings.themeAnnouncementChannelId
-      if (!themeAnnouncementChannelId) {
-        log.warn({ guildId: guildSettings.guildId }, 'No theme announcement channel id')
-        continue
-      }
-
-      const message = await this.sendJamAnnouncement(jam, guildSettings)
-      await GuildJamModel.set({
-        data: {
-          guildId: guildSettings.guildId,
-          jamId: jam.id,
-          messageId: message.id,
-          messageLink: message.url,
-        },
-      })
-
-      await this.createThemeSubmissionFolderForJam({
-        ...guildSettings,
-        themeAnnouncementChannelId,
-        jamId: jam.id,
-        theme: jam.theme,
-        jamDate: jam.createdAt,
-      })
+  /**
+   * Send a jam announcement for a guild.
+   *
+   * This will delete the existing jam announcement message if it exists.
+   * The new message will be sent in its place.
+   * The message id and link will be saved to db for reference.
+   */
+  static async sendJamAnnouncement(
+    jam: JamModel.Jam,
+    guildSettings: SettingsModel.Model,
+  ): Promise<Message> {
+    if (!guildSettings.themeAnnouncementChannelId) {
+      throw new Error('Theme announcement channel not found')
     }
+
+    const message = await this.sendThemeChannelMessage(
+      guildSettings.guildId,
+      guildSettings.themeAnnouncementChannelId!,
+      jamAnnouncementTemplate({ theme: jam.theme, deadline: new Date(jam.deadline) }),
+    )
+
+    await GuildJamModel.set({
+      data: {
+        guildId: guildSettings.guildId,
+        jamId: jam.id,
+        messageId: message.id,
+        messageLink: message.url,
+      },
+    })
+
+    return message
   }
 
   /**
@@ -75,7 +82,7 @@ export abstract class JamService {
    * This will create a new jam announcement message and send it to the theme announcement channel.
    * The message id and link will be saved to db for reference.
    */
-  static async resendJamAnnouncement(guildId: string): Promise<void> {
+  static async resendJamAnnouncement(guildId: string) {
     const guildSettings = await SettingsService.getGuildSettings(guildId)
     if (!guildSettings.themeAnnouncementChannelId) {
       throw new Error('Theme announcement channel not found')
@@ -104,36 +111,58 @@ export abstract class JamService {
         })
     }
 
-    const message = await this.sendJamAnnouncement(jam, guildSettings)
-    await GuildJamModel.set({
-      data: {
-        guildId: guildSettings.guildId,
-        jamId: jam.id,
-        messageId: message.id,
-        messageLink: message.url,
-      },
-    })
+    return await this.sendJamAnnouncement(jam, guildSettings)
   }
 
-  /**
-   * Send a jam announcement for a guild.
-   *
-   * This will delete the existing jam announcement message if it exists.
-   * The new message will be sent in its place.
-   * The message id and link will be saved to db for reference.
-   */
-  private static async sendJamAnnouncement(
+  static async sendJamMidweekReminderToGuild(
     jam: JamModel.Jam,
     guildSettings: SettingsModel.Model,
-  ): Promise<Message> {
+  ) {
     if (!guildSettings.themeAnnouncementChannelId) {
-      throw new Error('Theme announcement channel not found')
+      throw new Error('Theme announcement channel not found. This should not happen.')
     }
 
-    return await this.sendThemeChannelMessage(
+    const guildJam = await GuildJamModel.getByJamIdAndGuildId({
+      jamId: jam.id,
+      guildId: guildSettings.guildId,
+    })
+
+    if (!guildJam) {
+      // this means that a jam was never announce for this guild... it can happen when they add the bot mid week and don't run /theme. For now, just ignore it..
+      return
+    }
+
+    await this.sendThemeChannelMessage(
       guildSettings.guildId,
       guildSettings.themeAnnouncementChannelId!,
-      jamAnnouncementTemplate({ theme: jam.theme, deadline: new Date(jam.deadline) }),
+      jamMidweekReminderTemplate({ guildJam: guildJam }),
+    )
+  }
+
+  static async sendJamRecapMessageToGuild(
+    jam: JamModel.Jam,
+    guildSettings: SettingsModel.Model,
+  ): Promise<void> {
+    if (!guildSettings.themeAnnouncementChannelId) {
+      throw new Error('Theme announcement channel not found. This should not happen.')
+    }
+
+    const guildJam = await GuildJamModel.getByJamIdAndGuildId({
+      jamId: jam.id,
+      guildId: guildSettings.guildId,
+    })
+
+    if (!guildJam) {
+      // this means that a jam was never announce for this guild... it can happen when they add the bot mid week and don't run /theme. For now, just ignore it..
+      return
+    }
+
+    const submissions = await JamSubmissionModel.getAllSubmissionsForJam({ jamId: jam.id })
+
+    await this.sendThemeChannelMessage(
+      guildSettings.guildId,
+      guildSettings.themeAnnouncementChannelId!,
+      jamRecapMessageTemplate({ guildJam: guildJam, submissions }),
     )
   }
 
@@ -283,78 +312,9 @@ export abstract class JamService {
   }
 
   /**
-   * Send a midweek reminder for all scheduled guilds.
-   *
-   * This is called every day. It will find all the guilds with active jams, and
-   * send a reminder for any of them where the deadline for the latest jam is exactly 3 days away.
-   */
-  static async sendMidweekReminderForAllScheduledGuilds(): Promise<void> {
-    const jam = await this.getCurrentJam()
-    if (!jam) {
-      throw new Error('No current jam found')
-    }
-
-    // maps announcement day to reminder day
-    const allGuildSettings = await SettingsService.getAll()
-
-    for (const guildSettings of allGuildSettings) {
-      if (!guildSettings.themeAnnouncementChannelId) {
-        continue
-      }
-
-      const guildJam = await GuildJamModel.getByJamIdAndGuildId({
-        jamId: jam.id,
-        guildId: guildSettings.guildId,
-      })
-
-      if (!guildJam) {
-        continue
-      }
-
-      await this.sendThemeChannelMessage(
-        guildSettings.guildId,
-        guildSettings.themeAnnouncementChannelId!,
-        jamMidweekReminderTemplate({ guildJam: guildJam }),
-      )
-    }
-  }
-
-  static async sendJamRecapMessage(): Promise<void> {
-    const jam = await this.getLatestJam()
-    if (!jam) {
-      throw new Error('No latest jam found')
-    }
-
-    const allGuildSettings = await SettingsService.getAll()
-
-    for (const guildSettings of allGuildSettings) {
-      if (!guildSettings.themeAnnouncementChannelId) {
-        continue
-      }
-
-      const guildJam = await GuildJamModel.getByJamIdAndGuildId({
-        jamId: jam.id,
-        guildId: guildSettings.guildId,
-      })
-
-      if (!guildJam) {
-        continue
-      }
-
-      const submissions = await JamSubmissionModel.getAllSubmissionsForJam({ jamId: jam.id })
-
-      await this.sendThemeChannelMessage(
-        guildSettings.guildId,
-        guildSettings.themeAnnouncementChannelId!,
-        jamRecapMessageTemplate({ guildJam: guildJam, submissions }),
-      )
-    }
-  }
-
-  /**
    * Helper function that gets the latest jam for a guild if it is active (not past the deadline).
    */
-  private static async getCurrentJam() {
+  static async getCurrentJam() {
     const jam = await JamModel.getCurrentJam()
     if (!jam) {
       return null
@@ -364,8 +324,10 @@ export abstract class JamService {
 
   /**
    * Helper function that gets the latest jam.
+   *
+   * This include the current jam, but also just the last jam that happened.
    */
-  private static async getLatestJam() {
+  static async getLatestJam() {
     const jam = await JamModel.getLatestJam()
     if (!jam) {
       return null
@@ -377,7 +339,7 @@ export abstract class JamService {
    * Create a theme submission folder for a jam.
    * If the google drive folder URL is not provided, it will send an error message to the theme announcement channel.
    */
-  private static async createThemeSubmissionFolderForJam(args: {
+  static async createThemeSubmissionFolderForJam(args: {
     jamId: string
     guildId: string
     themeAnnouncementChannelId?: string | null

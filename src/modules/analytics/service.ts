@@ -1,6 +1,6 @@
 import { env } from '@/env'
 import { log } from '@/log'
-import { posthog } from '@/posthog'
+import { posthog } from '@/modules/analytics/providers/posthog'
 import type { ChatInputCommandInteraction, MessageComponentInteraction } from 'discord.js'
 import { InteractionType, type Interaction } from 'discord.js'
 import z from 'zod'

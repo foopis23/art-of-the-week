@@ -1,6 +1,7 @@
 import { db } from '@/db'
-import { settingsTable } from '@/db/schema'
+import { settingsTable, type StreaksMode } from '@/db/schema'
 import { eq, isNotNull, type InferInsertModel, type InferSelectModel } from 'drizzle-orm'
+import z from 'zod'
 
 export namespace SettingsModel {
   export type Model = InferSelectModel<typeof settingsTable>
@@ -10,6 +11,15 @@ export namespace SettingsModel {
   export type SetGeneralSettings = Partial<GeneralSettings> & { guildId: string }
   export type GoogleDriveSettings = Pick<Model, 'googleDriveFolderURL' | 'googleDriveEnabled'>
   export type SetGoogleDriveSettings = Partial<GoogleDriveSettings> & { guildId: string }
+
+  export const guildSettingsSchema = z.object({
+    guildId: z.string(),
+    themeAnnouncementChannelId: z.string().nullable(),
+    googleDriveEnabled: z.boolean(),
+    googleDriveFolderURL: z.string().nullable(),
+    streaksMode: z.string<StreaksMode>(),
+    createdAt: z.number(),
+  })
 
   export async function getAll() {
     return await db.select().from(settingsTable)

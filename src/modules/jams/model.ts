@@ -18,6 +18,7 @@ import {
   type InferInsertModel,
   type InferSelectModel,
 } from 'drizzle-orm'
+import z from 'zod'
 
 export namespace ThemePoolModel {
   export type Theme = InferSelectModel<typeof themePoolTable>
@@ -163,6 +164,13 @@ export namespace JamSubmissionModel {
 export namespace JamModel {
   export type Jam = InferSelectModel<typeof jamsTable>
   export type InsertJam = InferInsertModel<typeof jamsTable>
+
+  export const jamSchema = z.object({
+    createdAt: z.number(),
+    id: z.string(),
+    theme: z.string(),
+    deadline: z.number(),
+  })
 
   export async function getCurrentJam() {
     return await db.query.jamsTable.findFirst({

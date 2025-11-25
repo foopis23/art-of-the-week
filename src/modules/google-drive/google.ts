@@ -1,5 +1,5 @@
+import { env } from '@/env'
 import { google } from 'googleapis'
-import { env } from './env'
 
 const credentials = JSON.parse(env.GOOGLE_CLIENT_CREDENTIALS)
 export const oAuth2Client = new google.auth.OAuth2(
