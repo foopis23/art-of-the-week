@@ -27,7 +27,7 @@ export abstract class GoogleDriveService {
       },
       media: {
         mimeType: attachment.contentType,
-        body: Readable.from(body),
+        body: body,
       },
       fields: 'id',
     })
