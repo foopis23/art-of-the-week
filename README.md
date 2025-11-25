@@ -16,7 +16,8 @@ Each week, we will generate a theme for art creation. Participants will create a
 ## Setup
 ### 1. [Invite the bot](https://discord.com/oauth2/authorize?client_id=1436075080835792998&permissions=2251799813720064&integration_type=0&scope=bot) to your server
 ### 2. Run `/settings general` to configure the theme announcement channel
-### 3. If you want to display the current theme in the middle of the week, run `/theme` command in the theme announcement channel to create a new announcement message.
+
+*If you want to display the current theme in the middle of the week, run `/theme` command in the theme announcement channel to create a new announcement message.*
 
 ![General Settings Panel](./docs/images/general-settings.png)
 
