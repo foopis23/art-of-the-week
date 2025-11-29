@@ -1,4 +1,5 @@
 import { drive } from '@/modules/google-drive/google'
+import { Readable } from 'stream'
 
 export abstract class GoogleDriveService {
   static async uploadAttachmentToGoogleDriveFolder(
@@ -10,10 +11,17 @@ export abstract class GoogleDriveService {
     username: string,
     parent_directory_id: string,
   ) {
-    const body = await fetch(attachment.url).then((response) => response.body)
-    if (!body) {
-      throw new Error('Failed to fetch attachment body')
+    const response = await fetch(attachment.url)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch attachment: ${response.statusText}`)
     }
+
+    // Read the response as an ArrayBuffer and convert to Buffer
+    // Then create a Node.js Readable stream from the Buffer
+    // The Google Drive API expects a Node.js stream with a pipe() method
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const body = Readable.from(buffer)
 
     if (!attachment.contentType) {
       throw new Error('Attachment content type not found')
