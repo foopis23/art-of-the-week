@@ -19,7 +19,7 @@ export const generateJamFunction = inngest.createFunction(
     id: 'generate-jam',
   },
   {
-    cron: '0 13 * * MON',
+    cron: 'TZ=America/New_York 0 13 * * MON',
   },
   async ({ step }) => {
     const jam = await step.run('generate-jam', async () => {
@@ -89,7 +89,7 @@ export const fanOutJamReminderNotificationsFunction = inngest.createFunction(
     id: 'fan-out-jam-reminder-notifications',
   },
   {
-    cron: '0 15 * * THU',
+    cron: 'TZ=America/New_York 0 15 * * THU',
   },
   async ({ step }) => {
     const jam = await JamService.getCurrentJam()
@@ -142,7 +142,7 @@ export const fanOutJamRecapNotificationsFunction = inngest.createFunction(
     id: 'fan-out-jam-recap-notifications',
   },
   {
-    cron: '0 9 * * MON',
+    cron: 'TZ=America/New_York 0 9 * * MON',
   },
   async ({ step }) => {
     const jam = await JamService.getLatestJam()
